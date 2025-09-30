@@ -15,4 +15,8 @@ func SetupProjectRoutes(app *fiber.App, secret string) {
 	app.Post("/api/projects", middleware.JWTMiddleware(secret), controller.AddProjects)
 	app.Put("/api/projects/:id", middleware.JWTMiddleware(secret), controller.UpdateProjects)
 	app.Delete("/api/projects/:id", middleware.JWTMiddleware(secret), controller.RemoveProjects)
+
+	// app.Get("/api/UpdateProjectOrderInitial",controller.UpdateProjectOrder)
+
+	app.Post("/api/projects/updateOrder", middleware.JWTMiddleware(secret), controller.UpdateProjectOrderKanban)
 }

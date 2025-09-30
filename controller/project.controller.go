@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+
 	"github.com/MishraShardendu22/models"
 	"github.com/MishraShardendu22/util"
 	"github.com/gofiber/fiber/v2"
@@ -140,4 +142,47 @@ func RemoveProjects(c *fiber.Ctx) error {
 	}
 
 	return util.ResponseAPI(c, fiber.StatusOK, "Project removed successfully", nil, "")
+}
+
+// func UpdateProjectOrderInitial(c *fiber.Ctx) error {
+// 	var projects []models.Project
+
+// 	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
+// 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch projects", nil, "")
+// 	}
+
+// 	i := 1
+// 	for _, project := range projects {
+// 		project.Order = i
+// 		if err := mgm.Coll(&project).Update(&project); err != nil {
+// 			return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update project order", nil, "")
+// 		}
+// 		i++
+// 	}
+
+// 	return util.ResponseAPI(c, fiber.StatusOK, "Project order updated", nil, "")
+// }
+
+func UpdateProjectOrderKanban(c *fiber.Ctx) error {
+	var updatedProjects []models.UpdatedProject
+
+	if err := c.BodyParser(&updatedProjects); err != nil {
+		return util.ResponseAPI(c, fiber.StatusBadRequest, "Invalid request body", nil, "")
+	}
+
+	for _, up := range updatedProjects {
+		update := bson.M{"$set": bson.M{"order": up.Order}}
+
+		_, err := mgm.Coll(&models.Project{}).UpdateOne(
+			context.Background(),
+			bson.M{"_id": up.ProjectID},
+			update,
+		)
+		
+		if err != nil {
+			return err
+		}
+	}
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Project order updated successfully", nil, "")
 }

@@ -19,6 +19,7 @@ type User struct {
 
 type Project struct {
 	mgm.DefaultModel  `bson:",inline" json:"inline"`
+	Order             int      `bson:"order" json:"order"`
 	Skills            []string `bson:"skills" json:"skills"`
 	Description       string   `bson:"description" json:"description"`
 	ProjectName       string   `bson:"project_name" json:"project_name"`
@@ -76,4 +77,10 @@ type VolunteerExperienceTimeLine struct {
 	PositionOfAuthority string `bson:"position" json:"position"`
 	EndDate             string `bson:"end_date" json:"end_date"`
 	StartDate           string `bson:"start_date" json:"start_date"`
+}
+
+
+type UpdatedProject struct {
+	Order     int                `bson:"order" json:"order"`
+	ProjectID primitive.ObjectID `bson:"project_id" json:"project_id"`
 }

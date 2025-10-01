@@ -9,8 +9,8 @@ import (
 func SetupProjectRoutes(app *fiber.App, secret string) {
 	// Public routes - no authentication required
 	app.Get("/api/projects", controller.GetProjects)
-	app.Get("/api/projects/:id", controller.GetProjectByID)
 	app.Get("/api/projects/kanban", controller.GetProjectsKanban)
+	app.Get("/api/projects/:id", controller.GetProjectByID)
 	// app.Get("/api/UpdateProjectOrderInitial",controller.UpdateProjectOrder)
 
 	// Admin routes - authentication required
@@ -19,3 +19,10 @@ func SetupProjectRoutes(app *fiber.App, secret string) {
 	app.Delete("/api/projects/:id", middleware.JWTMiddleware(secret), controller.RemoveProjects)
 	app.Post("/api/projects/updateOrder", middleware.JWTMiddleware(secret), controller.UpdateProjectOrderKanban)
 }
+
+/*
+Route order is important in Fiber routing:
+- Specific routes like "/api/projects/kanban" must be defined BEFORE parameterized routes like "/api/projects/:id"
+- If "/api/projects/:id" comes first, the router would treat "kanban" as a value for the :id parameter
+- Current implementation is correct: /kanban route is defined before /:id route
+*/

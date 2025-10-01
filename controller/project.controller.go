@@ -3,11 +3,11 @@ package controller
 import (
 	"context"
 
-	"github.com/kamva/mgm/v3"
-	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
-	"github.com/MishraShardendu22/util"
 	"github.com/MishraShardendu22/models"
+	"github.com/MishraShardendu22/util"
+	"github.com/gofiber/fiber/v2"
+	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -176,7 +176,7 @@ func UpdateProjectOrderKanban(c *fiber.Ctx) error {
 			bson.M{"_id": up.ProjectID},
 			update,
 		)
-		
+
 		if err != nil {
 			return err
 		}
@@ -195,16 +195,11 @@ func GetProjectsKanban(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusOK, "No projects found", nil, "")
 	}
 
-	var mainProject []models.ProjectOrderUpdate
-
-	for i, j := 0, len(projects)-1; i < j; i, j = i+1, j-1 {
-		projects[i], projects[j] = projects[j], projects[i]
-	}
-
-	for _, project := range projects {
-		mainProject = append(mainProject, models.ProjectOrderUpdate{
-			Order:     project.Order,
-			ProjectID: project.ID,
+	var mainProject []models.UpdatedProject
+	for i := len(projects) - 1; i >= 0; i-- {
+		mainProject = append(mainProject, models.UpdatedProject{
+			Order:     projects[i].Order,
+			ProjectID: projects[i].ID,
 		})
 	}
 

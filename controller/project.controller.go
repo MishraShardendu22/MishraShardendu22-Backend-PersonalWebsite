@@ -195,11 +195,12 @@ func GetProjectsKanban(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusOK, "No projects found", nil, "")
 	}
 
-	var mainProject []models.UpdatedProject
+	var mainProject []models.ProjectKanban
 	for i := len(projects) - 1; i >= 0; i-- {
-		mainProject = append(mainProject, models.UpdatedProject{
-			Order:     projects[i].Order,
-			ProjectID: projects[i].ID,
+		mainProject = append(mainProject, models.ProjectKanban{
+			Order:       projects[i].Order,
+			ProjectID:   projects[i].ID,
+			ProjectTitle: projects[i].ProjectName,
 		})
 	}
 

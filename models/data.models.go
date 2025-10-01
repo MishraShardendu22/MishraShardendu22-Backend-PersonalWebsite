@@ -84,3 +84,9 @@ type UpdatedProject struct {
 	Order     int                `bson:"order" json:"order"`
 	ProjectID primitive.ObjectID `bson:"project_id" json:"project_id"`
 }
+
+type ProjectKanban struct {
+	Order     int                `bson:"order" json:"order"`
+	ProjectID primitive.ObjectID `bson:"project_id" json:"project_id"`
+	ProjectTitle string          `bson:"project_title" json:"project_title"`
+}

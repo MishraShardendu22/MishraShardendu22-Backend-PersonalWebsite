@@ -3,17 +3,15 @@ package controller
 import (
 	"context"
 
-	"github.com/MishraShardendu22/models"
-	"github.com/MishraShardendu22/util"
-	"github.com/gofiber/fiber/v2"
 	"github.com/kamva/mgm/v3"
+	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"github.com/MishraShardendu22/util"
+	"github.com/MishraShardendu22/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetProjects(c *fiber.Ctx) error {
-	// Since there's only one user and we want public access,
-	// fetch all projects directly from the database
 	var projects []models.Project
 	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch projects", nil, "")
@@ -185,4 +183,30 @@ func UpdateProjectOrderKanban(c *fiber.Ctx) error {
 	}
 
 	return util.ResponseAPI(c, fiber.StatusOK, "Project order updated successfully", nil, "")
+}
+
+func GetProjectsKanban(c *fiber.Ctx) error {
+	var projects []models.Project
+	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch projects", nil, "")
+	}
+
+	if len(projects) == 0 {
+		return util.ResponseAPI(c, fiber.StatusOK, "No projects found", nil, "")
+	}
+
+	var mainProject []models.ProjectOrderUpdate
+
+	for i, j := 0, len(projects)-1; i < j; i, j = i+1, j-1 {
+		projects[i], projects[j] = projects[j], projects[i]
+	}
+
+	for _, project := range projects {
+		mainProject = append(mainProject, models.ProjectOrderUpdate{
+			Order:     project.Order,
+			ProjectID: project.ID,
+		})
+	}
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Projects retrieved successfully", mainProject, "")
 }

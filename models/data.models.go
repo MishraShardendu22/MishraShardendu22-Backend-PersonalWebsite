@@ -84,3 +84,8 @@ type UpdatedProject struct {
 	Order     int                `bson:"order" json:"order"`
 	ProjectID primitive.ObjectID `bson:"project_id" json:"project_id"`
 }
+
+type ProjectOrderUpdate struct {
+	Order             int      `bson:"order" json:"order"`	
+	ProjectID         primitive.ObjectID `bson:"project_id" json:"project_id"`
+}

@@ -23,7 +23,7 @@ func GetProjects(c *fiber.Ctx) error {
 	}
 
 	sort.Slice(projects, func(i, j int) bool {
-		return projects[i].Order < projects[j].Order
+		return projects[i].Order > projects[j].Order
 	})
 
 	return util.ResponseAPI(c, fiber.StatusOK, "Projects retrieved successfully", projects, "")
@@ -197,7 +197,7 @@ func GetProjectsKanban(c *fiber.Ctx) error {
 	}
 
 	sort.Slice(projects, func(i, j int) bool {
-		return projects[i].Order < projects[j].Order
+		return projects[i].Order > projects[j].Order
 	})
 
 	var mainProject []models.ProjectKanban

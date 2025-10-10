@@ -59,6 +59,10 @@ A robust Go backend API built with Fiber framework for managing personal portfol
     └── test.util.go
 ```
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## Getting Started
 
 ### Prerequisites

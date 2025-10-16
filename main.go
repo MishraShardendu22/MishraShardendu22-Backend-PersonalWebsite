@@ -148,7 +148,7 @@ func main() {
 
 	setupMiddleware(app, config)
 
-	SetUpRoutes(app, logger)
+	SetUpRoutes(app, logger, config)
 
 	go func() {
 		logger.Info("Server starting", "port", config.Port)
@@ -161,9 +161,7 @@ func main() {
 	gracefulShutdown(app, logger)
 }
 
-func SetUpRoutes(app *fiber.App, logger *slog.Logger) {
-	config := loadConfig()
-
+func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	route.SetupTimeline(app, config.JWT_SECRET)
 	route.SetupExpRoutes(app, config.JWT_SECRET)
 	route.SetupSkillRoutes(app, config.JWT_SECRET)

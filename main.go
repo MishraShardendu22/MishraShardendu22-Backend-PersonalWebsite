@@ -1,23 +1,24 @@
 package main
 
 import (
-	"os"
-	"log"
-	"time"
 	"context"
-	"syscall"
+	"log"
 	"log/slog"
+	"os"
 	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/joho/godotenv"
-	"github.com/gofiber/fiber/v2"
-	"github.com/MishraShardendu22/util"
-	"github.com/MishraShardendu22/route"
-	"github.com/MishraShardendu22/models"
 	"github.com/MishraShardendu22/database"
+	"github.com/MishraShardendu22/models"
+	"github.com/MishraShardendu22/route"
+	"github.com/MishraShardendu22/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/joho/godotenv"
 )
 
 func loadConfig() *models.Config {
@@ -77,6 +78,25 @@ func setupMiddleware(app *fiber.App, config *models.Config) {
 		TimeFormat: "2006-01-02 15:04:05",
 		TimeZone:   "Local",
 	}))
+
+	// Global rate limiter - applies to all routes
+	// Limits requests per IP address to prevent abuse
+	app.Use(limiter.New(limiter.Config{
+		Max:        100,             // Maximum number of requests
+		Expiration: 1 * time.Minute, // Time window
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP() // Rate limit by IP address
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return util.ResponseAPI(c, fiber.StatusTooManyRequests,
+				"Too many requests from this IP. Please try again later.",
+				fiber.Map{"retry_after": 60},
+				"")
+		},
+		SkipFailedRequests:     false, // Count failed requests
+		SkipSuccessfulRequests: false, // Count all requests
+		Storage:                nil,   // Use in-memory storage (consider Redis for production)
+	}))
 }
 
 func gracefulShutdown(app *fiber.App, logger *slog.Logger) {
@@ -135,14 +155,14 @@ func main() {
 			))
 
 			code := fiber.StatusInternalServerError
+			message := "Internal Server Error"
+
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
+				message = e.Message
 			}
 
-			return c.Status(code).JSON(fiber.Map{
-				"error":   "Internal Server Error",
-				"message": err.Error(),
-			})
+			return util.ResponseAPI(c, code, message, nil, "")
 		},
 	})
 
@@ -162,13 +182,36 @@ func main() {
 }
 
 func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
-	route.SetupTimeline(app, config.JWT_SECRET)
-	route.SetupExpRoutes(app, config.JWT_SECRET)
-	route.SetupSkillRoutes(app, config.JWT_SECRET)
-	route.SetupProjectRoutes(app, config.JWT_SECRET)
-	route.SetupVolunteerExpRoutes(app, config.JWT_SECRET)
-	route.SetupCertificationRoutes(app, config.JWT_SECRET)
-	route.SetupAdminRoutes(app, config.AdminPass, config.JWT_SECRET)
+	// Moderate rate limiter for CRUD operations (Timeline, Experience, Skills, etc.)
+	crudAPILimiter := limiter.New(limiter.Config{
+		Max:        50,              // Moderate limit for CRUD operations
+		Expiration: 1 * time.Minute, // Per minute window
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP() // Rate limit by IP address
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			logger.Warn("CRUD API rate limit hit",
+				"ip", c.IP(),
+				"path", c.Path(),
+			)
+			return util.ResponseAPI(c, fiber.StatusTooManyRequests,
+				"Too many requests. Please slow down.",
+				fiber.Map{"retry_after": 60, "endpoint": c.Path()},
+				"")
+		},
+	})
+
+	// Group CRUD routes with rate limiting
+	crudGroup := app.Group("/api", crudAPILimiter)
+
+	// Apply rate limiting to all CRUD routes via the group
+	route.SetupTimeline(crudGroup, config.JWT_SECRET)
+	route.SetupExpRoutes(crudGroup, config.JWT_SECRET)
+	route.SetupSkillRoutes(crudGroup, config.JWT_SECRET)
+	route.SetupProjectRoutes(crudGroup, config.JWT_SECRET)
+	route.SetupVolunteerExpRoutes(crudGroup, config.JWT_SECRET)
+	route.SetupCertificationRoutes(crudGroup, config.JWT_SECRET)
+	route.SetupAdminRoutes(crudGroup, config.AdminPass, config.JWT_SECRET)
 
 	app.Get("/api/test123", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
@@ -176,11 +219,31 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 		})
 	})
 
-	app.Get("/api/github", FetchGitHubProfile)
-	app.Get("/api/leetcode", FetchLeetCodeData)
-	app.Get("/api/github/stars", FetchGitHubStars)
-	app.Get("/api/github/commits", FetchGitHubCommits)
-	app.Get("/api/github/languages", FetchGitHubLanguages)
-	app.Get("/api/github/top-repos", FetchTopStarredRepos)
-	app.Get("/api/github/calendar", FetchContributionCalendar)
+	// Stricter rate limiter for external API endpoints (GitHub/LeetCode)
+	// These endpoints may be expensive or have their own rate limits
+	externalAPILimiter := limiter.New(limiter.Config{
+		Max:        20,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			logger.Warn("External API rate limit hit",
+				"ip", c.IP(),
+				"path", c.Path(),
+			)
+			return util.ResponseAPI(c, fiber.StatusTooManyRequests,
+				"Too many requests to external APIs. Please wait before retrying.",
+				fiber.Map{"retry_after": 60, "endpoint": c.Path()},
+				"")
+		},
+	})
+
+	app.Get("/api/github", externalAPILimiter, FetchGitHubProfile)
+	app.Get("/api/leetcode", externalAPILimiter, FetchLeetCodeData)
+	app.Get("/api/github/stars", externalAPILimiter, FetchGitHubStars)
+	app.Get("/api/github/commits", externalAPILimiter, FetchGitHubCommits)
+	app.Get("/api/github/languages", externalAPILimiter, FetchGitHubLanguages)
+	app.Get("/api/github/top-repos", externalAPILimiter, FetchTopStarredRepos)
+	app.Get("/api/github/calendar", externalAPILimiter, FetchContributionCalendar)
 }

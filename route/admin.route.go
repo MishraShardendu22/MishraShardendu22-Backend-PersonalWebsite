@@ -6,12 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupAdminRoutes(app *fiber.App, adminPass string, jwtSecret string) {
-	api := app.Group("/api")
-	
-	api.Post("/admin/auth", func(c *fiber.Ctx) error {
+func SetupAdminRoutes(router fiber.Router, adminPass string, jwtSecret string) {
+	router.Post("/admin/auth", func(c *fiber.Ctx) error {
 		return controller.AdminRegisterAndLogin(c, adminPass, jwtSecret)
 	})
 
-	api.Get("/admin/auth",middleware.JWTMiddleware(jwtSecret) ,controller.AdminGet)
+	router.Get("/admin/auth", middleware.JWTMiddleware(jwtSecret), controller.AdminGet)
 }

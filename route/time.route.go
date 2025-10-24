@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupTimeline(app *fiber.App, secret string) {
+func SetupTimeline(router fiber.Router, secret string) {
 
-	app.Get("/api/timeline", controller.ExperienceTimeline)
+	router.Get("/timeline", controller.ExperienceTimeline)
 }

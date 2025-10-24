@@ -6,13 +6,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupCertificationRoutes(app *fiber.App, secret string) {
+func SetupCertificationRoutes(router fiber.Router, secret string) {
 	// Public routes - no authentication required
-	app.Get("/api/certifications", controller.GetCertifications)
-	app.Get("/api/certifications/:id", controller.GetCertificationByID)
+	router.Get("/certifications", controller.GetCertifications)
+	router.Get("/certifications/:id", controller.GetCertificationByID)
 
 	// Admin routes - authentication required
-	app.Post("/api/certifications", middleware.JWTMiddleware(secret), controller.AddCertification)
-	app.Put("/api/certifications/:id", middleware.JWTMiddleware(secret), controller.UpdateCertification)
-	app.Delete("/api/certifications/:id", middleware.JWTMiddleware(secret), controller.RemoveCertification)
+	router.Post("/certifications", middleware.JWTMiddleware(secret), controller.AddCertification)
+	router.Put("/certifications/:id", middleware.JWTMiddleware(secret), controller.UpdateCertification)
+	router.Delete("/certifications/:id", middleware.JWTMiddleware(secret), controller.RemoveCertification)
 }

@@ -6,13 +6,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupExpRoutes(app *fiber.App, secret string) {
+func SetupExpRoutes(router fiber.Router, secret string) {
 	// Public routes - no authentication required
-	app.Get("/api/experiences", controller.GetExperiences)
-	app.Get("/api/experiences/:id", controller.GetExperienceByID)
+	router.Get("/experiences", controller.GetExperiences)
+	router.Get("/experiences/:id", controller.GetExperienceByID)
 
 	// Admin routes - authentication required
-	app.Post("/api/experiences", middleware.JWTMiddleware(secret), controller.AddExperiences)
-	app.Put("/api/experiences/:id", middleware.JWTMiddleware(secret), controller.UpdateExperiences)
-	app.Delete("/api/experiences/:id", middleware.JWTMiddleware(secret), controller.RemoveExperiences)
+	router.Post("/experiences", middleware.JWTMiddleware(secret), controller.AddExperiences)
+	router.Put("/experiences/:id", middleware.JWTMiddleware(secret), controller.UpdateExperiences)
+	router.Delete("/experiences/:id", middleware.JWTMiddleware(secret), controller.RemoveExperiences)
 }

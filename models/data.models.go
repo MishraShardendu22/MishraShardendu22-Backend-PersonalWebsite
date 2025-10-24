@@ -9,10 +9,10 @@ import (
 type User struct {
 	mgm.DefaultModel `bson:",inline" json:"inline"`
 	Email            string               `bson:"email" json:"email"`
-	Skills           []string             `bson:"skills" json:"skills"`
 	Password         string               `bson:"password" json:"password"`
-	Projects         []primitive.ObjectID `bson:"projects" json:"projects"`
 	AdminPass        string               `bson:"admin_pass" json:"admin_pass"`
+	Skills           []string             `bson:"skills" json:"skills"`
+	Projects         []primitive.ObjectID `bson:"projects" json:"projects"`
 	Experiences      []primitive.ObjectID `bson:"experiences" json:"experiences"`
 	Certifications   []primitive.ObjectID `bson:"certifications" json:"certifications"`
 }
@@ -32,23 +32,23 @@ type Project struct {
 type Experience struct {
 	mgm.DefaultModel   `bson:",inline" json:"inline"`
 	Images             []string             `bson:"images" json:"images"`
-	Projects           []primitive.ObjectID `bson:"projects" json:"projects"`
+	Technologies       []string             `bson:"technologies" json:"technologies"`
 	CreatedBy          string               `bson:"created_by" json:"created_by"`
 	Description        string               `bson:"description" json:"description"`
-	Technologies       []string             `bson:"technologies" json:"technologies"`
 	CompanyName        string               `bson:"company_name" json:"company_name"`
 	CompanyLogo        string               `bson:"company_logo" json:"company_logo"`
 	CertificateURL     string               `bson:"certificate_url" json:"certificate_url"`
+	Projects           []primitive.ObjectID `bson:"projects" json:"projects"`
 	ExperienceTimeline []ExperienceTimeLine `bson:"experience_time_line" json:"experience_time_line"`
 }
 
 type CertificationOrAchievements struct {
 	mgm.DefaultModel `bson:",inline" json:"inline"`
-	Title            string               `bson:"title" json:"title"`
+	Projects         []primitive.ObjectID `bson:"projects" json:"projects"`
 	Skills           []string             `bson:"skills" json:"skills"`
 	Images           []string             `bson:"images" json:"images"`
+	Title            string               `bson:"title" json:"title"`
 	Issuer           string               `bson:"issuer" json:"issuer"`
-	Projects         []primitive.ObjectID `bson:"projects" json:"projects"`
 	IssueDate        string               `bson:"issue_date" json:"issue_date"`
 	ExpiryDate       string               `bson:"expiry_date" json:"expiry_date"`
 	Description      string               `bson:"description" json:"description"`
@@ -58,13 +58,13 @@ type CertificationOrAchievements struct {
 type VolunteerExperience struct {
 	mgm.DefaultModel  `bson:",inline" json:"inline"`
 	Images            []string                      `bson:"images" json:"images"`
+	Technologies      []string                      `bson:"technologies" json:"technologies"`
 	Projects          []primitive.ObjectID          `bson:"projects" json:"projects"`
+	VolunteerTimeLine []VolunteerExperienceTimeLine `bson:"volunteer_time_line" json:"volunteer_time_line"`
 	CreatedBy         string                        `bson:"created_by" json:"created_by"`
 	Description       string                        `bson:"description" json:"description"`
-	Technologies      []string                      `bson:"technologies" json:"technologies"`
 	Organisation      string                        `bson:"organisation" json:"organisation"`
 	OrganisationLogo  string                        `bson:"organisation_logo" json:"organisation_logo"`
-	VolunteerTimeLine []VolunteerExperienceTimeLine `bson:"volunteer_time_line" json:"volunteer_time_line"`
 }
 
 type ExperienceTimeLine struct {
@@ -87,6 +87,6 @@ type UpdatedProject struct {
 
 type ProjectKanban struct {
 	Order     int                `bson:"order" json:"order"`
-	ProjectID primitive.ObjectID `bson:"project_id" json:"project_id"`
 	ProjectTitle string          `bson:"project_title" json:"project_title"`
+	ProjectID primitive.ObjectID `bson:"project_id" json:"project_id"`
 }

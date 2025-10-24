@@ -182,29 +182,9 @@ func main() {
 }
 
 func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
-	// Moderate rate limiter for CRUD operations (Timeline, Experience, Skills, etc.)
-	crudAPILimiter := limiter.New(limiter.Config{
-		Max:        50,              // Moderate limit for CRUD operations
-		Expiration: 1 * time.Minute, // Per minute window
-		KeyGenerator: func(c *fiber.Ctx) string {
-			return c.IP() // Rate limit by IP address
-		},
-		LimitReached: func(c *fiber.Ctx) error {
-			logger.Warn("CRUD API rate limit hit",
-				"ip", c.IP(),
-				"path", c.Path(),
-			)
-			return util.ResponseAPI(c, fiber.StatusTooManyRequests,
-				"Too many requests. Please slow down.",
-				fiber.Map{"retry_after": 60, "endpoint": c.Path()},
-				"")
-		},
-	})
 
-	// Group CRUD routes with rate limiting
-	crudGroup := app.Group("/api", crudAPILimiter)
+	crudGroup := app.Group("/api", util.SetupCRUDAPILimiter(logger))
 
-	// Apply rate limiting to all CRUD routes via the group
 	route.SetupTimeline(crudGroup, config.JWT_SECRET)
 	route.SetupExpRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupSkillRoutes(crudGroup, config.JWT_SECRET)
@@ -219,31 +199,12 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 		})
 	})
 
-	// Stricter rate limiter for external API endpoints (GitHub/LeetCode)
-	// These endpoints may be expensive or have their own rate limits
-	externalAPILimiter := limiter.New(limiter.Config{
-		Max:        20,
-		Expiration: 1 * time.Minute,
-		KeyGenerator: func(c *fiber.Ctx) string {
-			return c.IP()
-		},
-		LimitReached: func(c *fiber.Ctx) error {
-			logger.Warn("External API rate limit hit",
-				"ip", c.IP(),
-				"path", c.Path(),
-			)
-			return util.ResponseAPI(c, fiber.StatusTooManyRequests,
-				"Too many requests to external APIs. Please wait before retrying.",
-				fiber.Map{"retry_after": 60, "endpoint": c.Path()},
-				"")
-		},
-	})
 
-	app.Get("/api/github", externalAPILimiter, FetchGitHubProfile)
-	app.Get("/api/leetcode", externalAPILimiter, FetchLeetCodeData)
-	app.Get("/api/github/stars", externalAPILimiter, FetchGitHubStars)
-	app.Get("/api/github/commits", externalAPILimiter, FetchGitHubCommits)
-	app.Get("/api/github/languages", externalAPILimiter, FetchGitHubLanguages)
-	app.Get("/api/github/top-repos", externalAPILimiter, FetchTopStarredRepos)
-	app.Get("/api/github/calendar", externalAPILimiter, FetchContributionCalendar)
+	app.Get("/api/github", util.SetupExternalAPILimiter(logger), FetchGitHubProfile)
+	app.Get("/api/leetcode", util.SetupExternalAPILimiter(logger), FetchLeetCodeData)
+	app.Get("/api/github/stars", util.SetupExternalAPILimiter(logger), FetchGitHubStars)
+	app.Get("/api/github/commits", util.SetupExternalAPILimiter(logger), FetchGitHubCommits)
+	app.Get("/api/github/languages", util.SetupExternalAPILimiter(logger), FetchGitHubLanguages)
+	app.Get("/api/github/top-repos", util.SetupExternalAPILimiter(logger), FetchTopStarredRepos)
+	app.Get("/api/github/calendar", util.SetupExternalAPILimiter(logger), FetchContributionCalendar)
 }

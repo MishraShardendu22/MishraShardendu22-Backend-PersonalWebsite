@@ -202,6 +202,8 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	route.SetupCertificationRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupAdminRoutes(crudGroup, config.AdminPass, config.JWT_SECRET)
 
+	route.SetupTemplateRoutes(app)
+
 	app.Get("/api/test123", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message": "Working fine",

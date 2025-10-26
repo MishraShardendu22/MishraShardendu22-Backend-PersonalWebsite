@@ -9,7 +9,6 @@ import (
 )
 
 func SetupStatsRoutes(router fiber.Router, logger *slog.Logger) {
-	// All stats routes are public and use external API rate limiter
 	router.Get("/github", util.SetupExternalAPILimiter(logger), controller.FetchGitHubProfile)
 	router.Get("/leetcode", util.SetupExternalAPILimiter(logger), controller.FetchLeetCodeData)
 	router.Get("/github/stars", util.SetupExternalAPILimiter(logger), controller.FetchGitHubStars)

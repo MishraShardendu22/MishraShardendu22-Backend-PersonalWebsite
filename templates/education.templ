@@ -1,0 +1,233 @@
+package templates
+
+type EducationData struct {
+	CollegeName          string
+	CollegeBatch         string
+	CollegeWebsite       string
+	CollegeLocation      string
+	SchoolName           string
+	SchoolBatch          string
+	SchoolLocation       string
+	Class12Percentage    string
+	Class12Course        string
+	Class10Percentage    string
+	Languages            []string
+	ResumeViewLink       string
+	ResumeDownloadLink   string
+}
+
+templ EducationSection(data EducationData) {
+	<section class="py-20 relative overflow-hidden bg-background">
+		<div class="absolute inset-0 opacity-20"></div>
+		<div class="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+		<div class="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+		<div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+			<!-- Header -->
+			<div class="text-center mb-16 space-y-4">
+				<div class="inline-flex items-center px-4 py-2 bg-primary/5 rounded-full border border-primary/10 mb-4">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2 text-primary">
+						<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+						<path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+					</svg>
+					<span class="text-sm font-medium text-primary">Academic Journey</span>
+				</div>
+				<h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold">
+					<span class="text-foreground">Educational </span>
+					<span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Background</span>
+				</h2>
+				<p class="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+					Academic journey through diverse learning experiences and achievements
+				</p>
+			</div>
+			<!-- College & School Cards -->
+			<div class="grid lg:grid-cols-2 gap-8 mb-16">
+				<!-- College Card -->
+				<div class="min-h-[320px] bg-card border border-border backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+					<div class="flex mb-6 items-start justify-between">
+						<div class="flex items-center space-x-4">
+							<div class="w-14 h-14 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 flex-shrink-0">
+								<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 sm:w-8 sm:h-8 text-primary">
+									<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+									<path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+								</svg>
+							</div>
+							<div>
+								<h3 class="text-lg sm:text-xl font-bold text-primary mb-2">Higher Education</h3>
+								<div class="flex items-center space-x-2 text-sm text-muted-foreground">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+										<path d="M8 2v4"></path>
+										<path d="M16 2v4"></path>
+										<rect width="18" height="18" x="3" y="4" rx="2"></rect>
+										<path d="M3 10h18"></path>
+									</svg>
+									<span>{ data.CollegeBatch }</span>
+								</div>
+							</div>
+						</div>
+						<a href={ templ.URL(data.CollegeWebsite) } target="_blank" class="inline-flex items-center space-x-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-full transition-all duration-300 text-sm border border-primary/20">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+								<path d="M15 3h6v6"></path>
+								<path d="M10 14 21 3"></path>
+								<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+							</svg>
+							<span>Visit</span>
+						</a>
+					</div>
+					<div class="flex-1 space-y-4">
+						<div class="min-h-[3rem]">
+							<h4 class="text-base sm:text-lg font-semibold leading-tight text-foreground">{ data.CollegeName }</h4>
+						</div>
+						<div class="flex space-x-2 text-muted-foreground items-start">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 flex-shrink-0 mt-0.5">
+								<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+								<circle cx="12" cy="10" r="3"></circle>
+							</svg>
+							<span class="text-sm leading-relaxed">{ data.CollegeLocation }</span>
+						</div>
+						<div class="bg-muted/50 rounded-xl p-4 border border-border/50">
+							<p class="text-sm text-muted-foreground leading-relaxed">
+								Computer Science and Engineering - Focusing on software development and emerging technologies
+							</p>
+						</div>
+					</div>
+				</div>
+				<!-- School Card -->
+				<div class="min-h-[320px] bg-card border border-border backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl hover:border-secondary/30 transition-all duration-300 flex flex-col">
+					<div class="flex space-x-4 mb-6 items-center">
+						<div class="w-14 h-14 sm:w-16 sm:h-16 bg-secondary/10 rounded-full flex items-center justify-center border border-secondary/20 flex-shrink-0">
+							<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 sm:w-8 sm:h-8 text-secondary">
+								<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+							</svg>
+						</div>
+						<div>
+							<h3 class="text-lg sm:text-xl font-bold text-secondary mb-2">School Education</h3>
+							<div class="flex items-center space-x-2 text-sm text-muted-foreground">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+									<path d="M8 2v4"></path>
+									<path d="M16 2v4"></path>
+									<rect width="18" height="18" x="3" y="4" rx="2"></rect>
+									<path d="M3 10h18"></path>
+								</svg>
+								<span>{ data.SchoolBatch }</span>
+							</div>
+						</div>
+					</div>
+					<div class="flex-1 space-y-4">
+						<div class="min-h-[3rem]">
+							<h4 class="text-base sm:text-lg font-semibold leading-tight text-foreground">{ data.SchoolName }</h4>
+						</div>
+						<div class="flex space-x-2 text-muted-foreground items-start">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 flex-shrink-0 mt-0.5">
+								<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+								<circle cx="12" cy="10" r="3"></circle>
+							</svg>
+							<span class="text-sm leading-relaxed">{ data.SchoolLocation }</span>
+						</div>
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+							<div class="bg-primary/5 rounded-xl p-3 sm:p-4 border border-primary/10">
+								<div class="flex items-center space-x-2 mb-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-primary">
+										<path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
+										<circle cx="12" cy="8" r="6"></circle>
+									</svg>
+									<span class="font-semibold text-sm text-foreground">Class 12th</span>
+								</div>
+								<p class="text-lg sm:text-xl font-bold text-primary mb-1">{ data.Class12Percentage }</p>
+								<p class="text-xs text-muted-foreground leading-tight">{ data.Class12Course }</p>
+							</div>
+							<div class="bg-secondary/5 rounded-xl p-3 sm:p-4 border border-secondary/10">
+								<div class="flex items-center space-x-2 mb-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-secondary">
+										<path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
+										<circle cx="12" cy="8" r="6"></circle>
+									</svg>
+									<span class="font-semibold text-sm text-foreground">Class 10th</span>
+								</div>
+								<p class="text-lg sm:text-xl font-bold text-secondary mb-1">{ data.Class10Percentage }</p>
+								<p class="text-xs text-muted-foreground">All Subjects</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Languages & Resume Section -->
+			<div class="grid lg:grid-cols-3 gap-8">
+				<!-- Languages Card -->
+				<div class="min-h-[240px] bg-card border border-border backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl hover:border-accent/30 transition-all duration-300 flex flex-col">
+					<div class="flex space-x-4 mb-6 items-center">
+						<div class="w-14 h-14 sm:w-16 sm:h-16 bg-accent/10 rounded-full flex items-center justify-center border border-accent/20 flex-shrink-0">
+							<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 sm:w-8 sm:h-8 text-accent">
+								<path d="m5 8 6 6"></path>
+								<path d="m4 14 6-6 2-3"></path>
+								<path d="M2 5h12"></path>
+								<path d="M7 2h1"></path>
+								<path d="m22 22-5-10-5 10"></path>
+								<path d="M14 18h6"></path>
+							</svg>
+						</div>
+						<div>
+							<h3 class="text-lg sm:text-xl font-bold text-accent mb-1">Languages</h3>
+							<p class="text-sm text-muted-foreground">Communication</p>
+						</div>
+					</div>
+					<div class="flex-1 flex items-start">
+						<div class="flex flex-wrap gap-3">
+							for _, lang := range data.Languages {
+								<div class="px-3 sm:px-4 py-2 bg-accent/10 rounded-full text-accent font-medium hover:bg-accent/20 transition-all duration-300 cursor-default text-sm border border-accent/20 whitespace-nowrap">
+									{ lang }
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+				<!-- Resume Card -->
+				<div class="lg:col-span-2 min-h-[240px] bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 sm:p-8 border border-border shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col">
+					<div class="flex-1 flex items-center justify-between">
+						<div class="flex-1">
+							<div class="flex items-center space-x-4 mb-4">
+								<div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+									<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground">
+										<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+										<polyline points="7 10 12 15 17 10"></polyline>
+										<line x1="12" x2="12" y1="15" y2="3"></line>
+									</svg>
+								</div>
+								<div>
+									<h3 class="text-lg sm:text-xl font-bold mb-2 text-foreground">Complete Resume</h3>
+									<p class="text-sm sm:text-base text-muted-foreground leading-relaxed">
+										View detailed resume for comprehensive technical background
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="flex gap-3 sm:gap-4 flex-col flex-shrink-0">
+							<a href={ templ.URL(data.ResumeViewLink) } target="_blank" class="inline-flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+									<path d="M15 3h6v6"></path>
+									<path d="M10 14 21 3"></path>
+									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+								</svg>
+								<span>View Resume</span>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+									<path d="M5 12h14"></path>
+									<path d="m12 5 7 7-7 7"></path>
+								</svg>
+							</a>
+							<a href={ templ.URL(data.ResumeDownloadLink) } target="_blank" class="inline-flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+									<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+									<polyline points="7 10 12 15 17 10"></polyline>
+									<line x1="12" x2="12" y1="15" y2="3"></line>
+								</svg>
+								<span>Download PDF</span>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="mt-16 flex justify-center">
+				<div class="w-24 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+			</div>
+		</div>
+	</section>
+}

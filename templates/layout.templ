@@ -1,0 +1,118 @@
+package templates
+
+templ FullPageLayout(heroData HeroData, skillsData SkillsData, educationData EducationData, contactData ContactData, footerData FooterData) {
+	<!DOCTYPE html>
+	<html lang="en" class="light">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ heroData.Name } - Portfolio</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script>
+				tailwind.config = {
+					darkMode: 'class',
+					theme: {
+						extend: {
+							colors: {
+								border: "hsl(var(--border))",
+								input: "hsl(var(--input))",
+								ring: "hsl(var(--ring))",
+								background: "hsl(var(--background))",
+								foreground: "hsl(var(--foreground))",
+								primary: {
+									DEFAULT: "hsl(var(--primary))",
+									foreground: "hsl(var(--primary-foreground))",
+								},
+								secondary: {
+									DEFAULT: "hsl(var(--secondary))",
+									foreground: "hsl(var(--secondary-foreground))",
+								},
+								accent: {
+									DEFAULT: "hsl(var(--accent))",
+									foreground: "hsl(var(--accent-foreground))",
+								},
+								muted: {
+									DEFAULT: "hsl(var(--muted))",
+									foreground: "hsl(var(--muted-foreground))",
+								},
+								card: {
+									DEFAULT: "hsl(var(--card))",
+									foreground: "hsl(var(--card-foreground))",
+								},
+							},
+						},
+					},
+				}
+			</script>
+			<style>
+				@layer base {
+					:root {
+						--background: 0 0% 100%;
+						--foreground: 222.2 84% 4.9%;
+						--card: 0 0% 100%;
+						--card-foreground: 222.2 84% 4.9%;
+						--primary: 142.1 76.2% 36.3%;
+						--primary-foreground: 355.7 100% 97.3%;
+						--secondary: 189.4 94.5% 42.7%;
+						--secondary-foreground: 210 40% 98%;
+						--accent: 217.2 91.2% 59.8%;
+						--accent-foreground: 222.2 47.4% 11.2%;
+						--muted: 210 40% 96.1%;
+						--muted-foreground: 215.4 16.3% 46.9%;
+						--border: 214.3 31.8% 91.4%;
+						--input: 214.3 31.8% 91.4%;
+						--ring: 142.1 76.2% 36.3%;
+					}
+
+					.dark {
+						--background: 222.2 84% 4.9%;
+						--foreground: 210 40% 98%;
+						--card: 222.2 84% 10%;
+						--card-foreground: 210 40% 98%;
+						--primary: 142.1 70.6% 45.3%;
+						--primary-foreground: 144.9 80.4% 10%;
+						--secondary: 189.4 94.5% 52.7%;
+						--secondary-foreground: 222.2 47.4% 11.2%;
+						--accent: 217.2 91.2% 59.8%;
+						--accent-foreground: 222.2 47.4% 11.2%;
+						--muted: 217.2 32.6% 17.5%;
+						--muted-foreground: 215 20.2% 65.1%;
+						--border: 217.2 32.6% 17.5%;
+						--input: 217.2 32.6% 17.5%;
+						--ring: 142.1 70.6% 45.3%;
+					}
+				}
+
+				@keyframes pulse {
+					0%, 100% { opacity: 1; }
+					50% { opacity: 0.5; }
+				}
+				.animate-pulse {
+					animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+				}
+			</style>
+		</head>
+		<body class="bg-background text-foreground antialiased">
+			@HeroSection(heroData)
+			@SkillsSection(skillsData)
+			@EducationSection(educationData)
+			// @ContactSection(contactData)
+			@FooterSection(footerData)
+			
+			<script>
+				// Theme toggler - can be triggered via button
+				function toggleTheme() {
+					document.documentElement.classList.toggle('dark');
+					localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+				}
+
+				// Auto-detect user preference on load
+				if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+			</script>
+		</body>
+	</html>
+}

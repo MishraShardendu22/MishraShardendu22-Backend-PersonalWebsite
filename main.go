@@ -52,10 +52,18 @@ func setupLogger(config *models.Config) {
 
 	opts := &slog.HandlerOptions{
 		Level:     level,
-		AddSource: true,
+		AddSource: config.Environment == "production",
 	}
 
-	handler := slog.NewJSONHandler(os.Stdout, opts)
+	var handler slog.Handler
+	if config.Environment == "development" {
+		// Use text handler for better readability in development
+		handler = slog.NewTextHandler(os.Stdout, opts)
+	} else {
+		// Use JSON handler for production (easier to parse by log aggregators)
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	}
+
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 }
@@ -185,6 +193,7 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 
 	crudGroup := app.Group("/api", util.SetupCRUDAPILimiter(logger))
 
+	route.SetupStatsRoutes(crudGroup, logger)
 	route.SetupTimeline(crudGroup, config.JWT_SECRET)
 	route.SetupExpRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupSkillRoutes(crudGroup, config.JWT_SECRET)
@@ -198,13 +207,4 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 			"message": "Working fine",
 		})
 	})
-
-
-	app.Get("/api/github", util.SetupExternalAPILimiter(logger), FetchGitHubProfile)
-	app.Get("/api/leetcode", util.SetupExternalAPILimiter(logger), FetchLeetCodeData)
-	app.Get("/api/github/stars", util.SetupExternalAPILimiter(logger), FetchGitHubStars)
-	app.Get("/api/github/commits", util.SetupExternalAPILimiter(logger), FetchGitHubCommits)
-	app.Get("/api/github/languages", util.SetupExternalAPILimiter(logger), FetchGitHubLanguages)
-	app.Get("/api/github/top-repos", util.SetupExternalAPILimiter(logger), FetchTopStarredRepos)
-	app.Get("/api/github/calendar", util.SetupExternalAPILimiter(logger), FetchContributionCalendar)
 }

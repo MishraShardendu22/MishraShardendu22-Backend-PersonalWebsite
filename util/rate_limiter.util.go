@@ -8,13 +8,12 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
 
-// Moderate rate limiter for CRUD operations (Timeline, Experience, Skills, etc.)
 func SetupCRUDAPILimiter(logger *slog.Logger) fiber.Handler {
 	CrudAPILimiter := limiter.New(limiter.Config{
-		Max:        50,              // Moderate limit for CRUD operations
-		Expiration: 1 * time.Minute, // Per minute window
+		Max:        80,              
+		Expiration: 1 * time.Minute,
 		KeyGenerator: func(c *fiber.Ctx) string {
-			return c.IP() // Rate limit by IP address
+			return c.IP()
 		},
 		LimitReached: func(c *fiber.Ctx) error {
 			logger.Warn("CRUD API rate limit hit",

@@ -55,7 +55,12 @@ func setupLogger(config *models.Config) {
 		AddSource: true,
 	}
 
-	handler := slog.NewJSONHandler(os.Stdout, opts)
+	var handler slog.Handler
+	if config.Environment == "development" {
+		handler = slog.NewTextHandler(os.Stdout, opts)
+	} else {
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	}
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 }
@@ -182,7 +187,6 @@ func main() {
 }
 
 func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
-
 	crudGroup := app.Group("/api", util.SetupCRUDAPILimiter(logger))
 
 	route.SetupTimeline(crudGroup, config.JWT_SECRET)
@@ -193,18 +197,13 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	route.SetupCertificationRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupAdminRoutes(crudGroup, config.AdminPass, config.JWT_SECRET)
 
+	statsGroup := app.Group("/api", util.SetupExternalAPILimiter(logger))
+	route.SetupStatsRoutes(statsGroup)
+
+	// Test endpoint
 	app.Get("/api/test123", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message": "Working fine",
 		})
 	})
-
-
-	app.Get("/api/github", util.SetupExternalAPILimiter(logger), FetchGitHubProfile)
-	app.Get("/api/leetcode", util.SetupExternalAPILimiter(logger), FetchLeetCodeData)
-	app.Get("/api/github/stars", util.SetupExternalAPILimiter(logger), FetchGitHubStars)
-	app.Get("/api/github/commits", util.SetupExternalAPILimiter(logger), FetchGitHubCommits)
-	app.Get("/api/github/languages", util.SetupExternalAPILimiter(logger), FetchGitHubLanguages)
-	app.Get("/api/github/top-repos", util.SetupExternalAPILimiter(logger), FetchTopStarredRepos)
-	app.Get("/api/github/calendar", util.SetupExternalAPILimiter(logger), FetchContributionCalendar)
 }

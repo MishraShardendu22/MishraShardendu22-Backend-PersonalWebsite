@@ -10,6 +10,17 @@ import (
 )
 
 func GetCertifications(c *fiber.Ctx) error {
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 15)
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 15
+	}
+
 	// Since there's only one user and we want public access,
 	// fetch all certifications directly from the database
 	var certs []models.CertificationOrAchievements
@@ -23,7 +34,39 @@ func GetCertifications(c *fiber.Ctx) error {
 
 	certs = reverseCerts(certs)
 
-	return util.ResponseAPI(c, fiber.StatusOK, "Certifications retrieved successfully", certs, "")
+	// Calculate pagination
+	totalCerts := len(certs)
+	totalPages := (totalCerts + limit - 1) / limit
+	startIndex := (page - 1) * limit
+	endIndex := startIndex + limit
+
+	if startIndex >= totalCerts {
+		return util.ResponseAPI(c, fiber.StatusOK, "Page out of range", fiber.Map{
+			"certifications": []models.CertificationOrAchievements{},
+			"page":           page,
+			"limit":          limit,
+			"total":          totalCerts,
+			"total_pages":    totalPages,
+			"has_next":       false,
+			"has_previous":   page > 1,
+		}, "")
+	}
+
+	if endIndex > totalCerts {
+		endIndex = totalCerts
+	}
+
+	paginatedCerts := certs[startIndex:endIndex]
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Certifications retrieved successfully", fiber.Map{
+		"certifications": paginatedCerts,
+		"page":           page,
+		"limit":          limit,
+		"total":          totalCerts,
+		"total_pages":    totalPages,
+		"has_next":       page < totalPages,
+		"has_previous":   page > 1,
+	}, "")
 }
 
 func reverseCerts(certs []models.CertificationOrAchievements) []models.CertificationOrAchievements {
@@ -159,7 +202,6 @@ func RemoveCertification(c *fiber.Ctx) error {
 	if err := certColl.Delete(cert); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete certification", nil, "")
 	}
-
 
 	return util.ResponseAPI(c, fiber.StatusOK, "Certification removed successfully", nil, "")
 }

@@ -39,6 +39,17 @@ func AddSkills(c *fiber.Ctx) error {
 }
 
 func GetSkills(c *fiber.Ctx) error {
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 15)
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 15
+	}
+
 	user := &models.User{}
 	if err := mgm.Coll(user).First(bson.M{}, user); err != nil {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "User not found", nil, "")
@@ -74,21 +85,37 @@ func GetSkills(c *fiber.Ctx) error {
 		skills = append(skills, s)
 	}
 
-	return util.ResponseAPI(c, fiber.StatusOK, "Skills retrieved successfully", skills, "")
+	// Calculate pagination
+	totalSkills := len(skills)
+	totalPages := (totalSkills + limit - 1) / limit
+	startIndex := (page - 1) * limit
+	endIndex := startIndex + limit
+
+	if startIndex >= totalSkills {
+		return util.ResponseAPI(c, fiber.StatusOK, "Page out of range", fiber.Map{
+			"skills":       []string{},
+			"page":         page,
+			"limit":        limit,
+			"total":        totalSkills,
+			"total_pages":  totalPages,
+			"has_next":     false,
+			"has_previous": page > 1,
+		}, "")
+	}
+
+	if endIndex > totalSkills {
+		endIndex = totalSkills
+	}
+
+	paginatedSkills := skills[startIndex:endIndex]
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Skills retrieved successfully", fiber.Map{
+		"skills":       paginatedSkills,
+		"page":         page,
+		"limit":        limit,
+		"total":        totalSkills,
+		"total_pages":  totalPages,
+		"has_next":     page < totalPages,
+		"has_previous": page > 1,
+	}, "")
 }
-
-// func GetSkills(c *fiber.Ctx) error {
-// 	// Since there's only one user and we want public access,
-// 	// fetch skills from the first user in the database
-// 	user := &models.User{}
-// 	err := mgm.Coll(user).First(bson.M{}, user)
-// 	if err != nil {
-// 		return util.ResponseAPI(c, fiber.StatusNotFound, "User not found", nil, "")
-// 	}
-
-// 	if len(user.Skills) == 0 {
-// 		return util.ResponseAPI(c, fiber.StatusOK, "No skills found", nil, "")
-// 	}
-
-// 	return util.ResponseAPI(c, fiber.StatusOK, "Skills retrieved successfully", user.Skills, "")
-// }

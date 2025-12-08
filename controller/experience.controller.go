@@ -10,6 +10,17 @@ import (
 )
 
 func GetExperiences(c *fiber.Ctx) error {
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 15)
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 15
+	}
+
 	var exps []models.Experience
 	if err := mgm.Coll(&models.Experience{}).SimpleFind(&exps, bson.M{}); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch experiences", nil, "")
@@ -20,7 +31,40 @@ func GetExperiences(c *fiber.Ctx) error {
 	}
 
 	exps = ReverseExperiences(exps)
-	return util.ResponseAPI(c, fiber.StatusOK, "Experiences retrieved successfully", exps, "")
+
+	// Calculate pagination
+	totalExps := len(exps)
+	totalPages := (totalExps + limit - 1) / limit
+	startIndex := (page - 1) * limit
+	endIndex := startIndex + limit
+
+	if startIndex >= totalExps {
+		return util.ResponseAPI(c, fiber.StatusOK, "Page out of range", fiber.Map{
+			"experiences":  []models.Experience{},
+			"page":         page,
+			"limit":        limit,
+			"total":        totalExps,
+			"total_pages":  totalPages,
+			"has_next":     false,
+			"has_previous": page > 1,
+		}, "")
+	}
+
+	if endIndex > totalExps {
+		endIndex = totalExps
+	}
+
+	paginatedExps := exps[startIndex:endIndex]
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Experiences retrieved successfully", fiber.Map{
+		"experiences":  paginatedExps,
+		"page":         page,
+		"limit":        limit,
+		"total":        totalExps,
+		"total_pages":  totalPages,
+		"has_next":     page < totalPages,
+		"has_previous": page > 1,
+	}, "")
 }
 
 func GetExperienceByID(c *fiber.Ctx) error {

@@ -13,6 +13,17 @@ import (
 )
 
 func GetProjects(c *fiber.Ctx) error {
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 15)
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 15
+	}
+
 	var projects []models.Project
 	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch projects", nil, "")
@@ -26,7 +37,39 @@ func GetProjects(c *fiber.Ctx) error {
 		return projects[i].Order < projects[j].Order
 	})
 
-	return util.ResponseAPI(c, fiber.StatusOK, "Projects retrieved successfully", projects, "")
+	// Calculate pagination
+	totalProjects := len(projects)
+	totalPages := (totalProjects + limit - 1) / limit
+	startIndex := (page - 1) * limit
+	endIndex := startIndex + limit
+
+	if startIndex >= totalProjects {
+		return util.ResponseAPI(c, fiber.StatusOK, "Page out of range", fiber.Map{
+			"projects":     []models.Project{},
+			"page":         page,
+			"limit":        limit,
+			"total":        totalProjects,
+			"total_pages":  totalPages,
+			"has_next":     false,
+			"has_previous": page > 1,
+		}, "")
+	}
+
+	if endIndex > totalProjects {
+		endIndex = totalProjects
+	}
+
+	paginatedProjects := projects[startIndex:endIndex]
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Projects retrieved successfully", fiber.Map{
+		"projects":     paginatedProjects,
+		"page":         page,
+		"limit":        limit,
+		"total":        totalProjects,
+		"total_pages":  totalPages,
+		"has_next":     page < totalPages,
+		"has_previous": page > 1,
+	}, "")
 }
 
 func GetProjectByID(c *fiber.Ctx) error {

@@ -1,15 +1,26 @@
 package controller
 
 import (
-	"github.com/kamva/mgm/v3"
-	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
-	"github.com/MishraShardendu22/util"
 	"github.com/MishraShardendu22/models"
+	"github.com/MishraShardendu22/util"
+	"github.com/gofiber/fiber/v2"
+	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetVolunteerExperiences(c *fiber.Ctx) error {
+	// Parse pagination parameters
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 15)
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 15
+	}
+
 	var exps []models.VolunteerExperience
 	if err := mgm.Coll(&models.VolunteerExperience{}).SimpleFind(&exps, bson.M{}); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch volunteer experiences", nil, "")
@@ -20,7 +31,40 @@ func GetVolunteerExperiences(c *fiber.Ctx) error {
 	}
 
 	exps = ReverseVolunteerExperiences(exps)
-	return util.ResponseAPI(c, fiber.StatusOK, "Volunteer experiences retrieved successfully", exps, "")
+
+	// Calculate pagination
+	totalExps := len(exps)
+	totalPages := (totalExps + limit - 1) / limit
+	startIndex := (page - 1) * limit
+	endIndex := startIndex + limit
+
+	if startIndex >= totalExps {
+		return util.ResponseAPI(c, fiber.StatusOK, "Page out of range", fiber.Map{
+			"volunteer_experiences": []models.VolunteerExperience{},
+			"page":                  page,
+			"limit":                 limit,
+			"total":                 totalExps,
+			"total_pages":           totalPages,
+			"has_next":              false,
+			"has_previous":          page > 1,
+		}, "")
+	}
+
+	if endIndex > totalExps {
+		endIndex = totalExps
+	}
+
+	paginatedExps := exps[startIndex:endIndex]
+
+	return util.ResponseAPI(c, fiber.StatusOK, "Volunteer experiences retrieved successfully", fiber.Map{
+		"volunteer_experiences": paginatedExps,
+		"page":                  page,
+		"limit":                 limit,
+		"total":                 totalExps,
+		"total_pages":           totalPages,
+		"has_next":              page < totalPages,
+		"has_previous":          page > 1,
+	}, "")
 }
 
 func GetVolunteerExperienceByID(c *fiber.Ctx) error {

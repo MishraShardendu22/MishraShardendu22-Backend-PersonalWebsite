@@ -20,7 +20,9 @@ var maxWorkers = int64(5)
 
 type RepoInfo struct {
 	Name            string `json:"name"`
+	Description     string `json:"description"`
 	Fork            bool   `json:"fork"`
+	Language        string `json:"language"`
 	LanguagesURL    string `json:"languages_url"`
 	StargazersCount int    `json:"stargazers_count"`
 	HTMLURL         string `json:"html_url"`
@@ -256,9 +258,11 @@ func FetchTopStarredRepos(c *fiber.Ctx) error {
 			break
 		}
 		top = append(top, map[string]interface{}{
-			"name":  r.Name,
-			"url":   r.HTMLURL,
-			"stars": r.StargazersCount,
+			"name":             r.Name,
+			"html_url":         r.HTMLURL,
+			"stargazers_count": r.StargazersCount,
+			"description":      r.Description,
+			"language":         r.Language,
 		})
 	}
 

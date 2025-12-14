@@ -1,68 +1,54 @@
 {
 	"info": {
-		"name": "Personal Website Backend API",
-		"description": "Complete API collection for Personal Website Backend with dynamic variables",
+		"_postman_id": "portfolio-backend-api",
+		"name": "Portfolio Backend API",
+		"description": "Complete API collection for Portfolio Backend - All endpoints match actual controller implementations",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{jwt_token}}",
-				"type": "string"
-			}
-		]
 	},
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:5000",
+			"value": "http://localhost:5000/api",
 			"type": "string"
 		},
 		{
 			"key": "jwt_token",
 			"value": "",
 			"type": "string"
-		},
-		{
-			"key": "project_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "experience_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "certification_id",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "volunteer_id",
-			"value": "",
-			"type": "string"
 		}
 	],
 	"item": [
 		{
+			"name": "Test",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/test123",
+							"host": ["{{base_url}}"],
+							"path": ["test123"]
+						}
+					}
+				}
+			]
+		},
+		{
 			"name": "Admin",
 			"item": [
 				{
-					"name": "Admin Login",
+					"name": "Login/Register",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.token) {",
-									"        pm.collectionVariables.set(\"jwt_token\", jsonData.data.token);",
-									"        console.log(\"JWT Token saved:\", jsonData.data.token);",
-									"    }",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.token) {",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.data.token);",
+									"    console.log(\"JWT Token saved:\", jsonData.data.token);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -70,9 +56,6 @@
 						}
 					],
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "POST",
 						"header": [
 							{
@@ -82,47 +65,40 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"your_admin_password\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/admin/auth",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"admin",
-								"auth"
-							]
+							"raw": "{{base_url}}/admin/auth",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "auth"]
 						},
-						"description": "Admin login endpoint - automatically saves JWT token to collection variables"
-					},
-					"response": []
+						"description": "Admin login/register endpoint - automatically saves JWT token"
+					}
 				},
 				{
-					"name": "Get Admin Info",
+					"name": "Get Admin Details",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/admin/auth",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"admin",
-								"auth"
-							]
+							"raw": "{{base_url}}/admin/auth",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "auth"]
 						},
-						"description": "Get admin information - requires JWT authentication"
-					},
-					"response": []
+						"description": "Get admin information - requires JWT"
+					}
 				}
-			],
-			"description": "Admin authentication endpoints"
+			]
 		},
 		{
 			"name": "Projects",
@@ -130,21 +106,12 @@
 				{
 					"name": "Get All Projects (Paginated)",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects?page=1&limit=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects"
-							],
+							"raw": "{{base_url}}/projects?page=1&limit=15",
+							"host": ["{{base_url}}"],
+							"path": ["projects"],
 							"query": [
 								{
 									"key": "page",
@@ -158,89 +125,55 @@
 								}
 							]
 						},
-						"description": "Public endpoint - Get paginated projects (15 per page by default). Returns: projects array, page, limit, total, total_pages, has_next, has_previous"
-					},
-					"response": []
+						"description": "Public endpoint - Returns paginated projects with page, limit, total, total_pages, has_next, has_previous"
+					}
 				},
 				{
 					"name": "Get Projects Kanban",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects/kanban",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects",
-								"kanban"
-							]
+							"raw": "{{base_url}}/projects/kanban",
+							"host": ["{{base_url}}"],
+							"path": ["projects", "kanban"]
 						},
 						"description": "Public endpoint - Get projects in kanban format with order"
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Get Project By ID",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"// You can set project_id variable manually or from another request"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects/{{project_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects",
-								"{{project_id}}"
+							"raw": "{{base_url}}/projects/:id",
+							"host": ["{{base_url}}"],
+							"path": ["projects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Public endpoint - Get project by ID"
-					},
-					"response": []
+						"description": "Public endpoint - Get specific project by ID"
+					}
 				},
 				{
 					"name": "Add Project",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data._id) {",
-									"        pm.collectionVariables.set(\"project_id\", jsonData.data._id);",
-									"        console.log(\"Project ID saved:\", jsonData.data._id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -250,26 +183,29 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"order\": 1,\n  \"skills\": [\"Go\", \"MongoDB\", \"Fiber\"],\n  \"description\": \"Detailed project description\",\n  \"project_name\": \"Project Name\",\n  \"project_video\": \"https://example.com/video.mp4\",\n  \"project_live_link\": \"https://example.com\",\n  \"small_description\": \"Short project summary\",\n  \"project_repository\": \"https://github.com/user/repo\"\n}"
+							"raw": "{\n  \"project_name\": \"Project Name\",\n  \"small_description\": \"Brief description\",\n  \"description\": \"Detailed description\",\n  \"skills\": [\"React\", \"Node.js\"],\n  \"project_repository\": \"https://github.com/user/repo\",\n  \"project_live_link\": \"https://example.com\",\n  \"project_video\": \"https://youtube.com/watch?v=xxx\",\n  \"order\": 1\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects"
-							]
+							"raw": "{{base_url}}/projects",
+							"host": ["{{base_url}}"],
+							"path": ["projects"]
 						},
 						"description": "Admin endpoint - Add new project (requires JWT)"
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Update Project",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -279,27 +215,36 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"order\": 2,\n  \"skills\": [\"Go\", \"MongoDB\", \"Fiber\", \"JWT\"],\n  \"description\": \"Updated project description\",\n  \"project_name\": \"Updated Project Name\",\n  \"project_video\": \"https://example.com/video-updated.mp4\",\n  \"project_live_link\": \"https://example-updated.com\",\n  \"small_description\": \"Updated short summary\",\n  \"project_repository\": \"https://github.com/user/repo-updated\"\n}"
+							"raw": "{\n  \"project_name\": \"Updated Project Name\",\n  \"small_description\": \"Updated description\",\n  \"description\": \"Updated detailed description\",\n  \"skills\": [\"React\", \"TypeScript\"],\n  \"project_repository\": \"https://github.com/user/repo\",\n  \"project_live_link\": \"https://example.com\",\n  \"project_video\": \"https://youtube.com/watch?v=xxx\",\n  \"order\": 1\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects/{{project_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects",
-								"{{project_id}}"
+							"raw": "{{base_url}}/projects/:id",
+							"host": ["{{base_url}}"],
+							"path": ["projects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Admin endpoint - Update project (requires JWT)"
-					},
-					"response": []
+						"description": "Admin endpoint - Update existing project (requires JWT)"
+					}
 				},
 				{
 					"name": "Update Project Order",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -309,47 +254,47 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "[\n  {\n    \"project_id\": \"{{project_id}}\",\n    \"order\": 1\n  }\n]"
+							"raw": "[\n  {\n    \"project_id\": \"project_id_1\",\n    \"order\": 1\n  },\n  {\n    \"project_id\": \"project_id_2\",\n    \"order\": 2\n  }\n]"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects/updateOrder",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects",
-								"updateOrder"
-							]
+							"raw": "{{base_url}}/projects/updateOrder",
+							"host": ["{{base_url}}"],
+							"path": ["projects", "updateOrder"]
 						},
-						"description": "Admin endpoint - Update project order in kanban (requires JWT)"
-					},
-					"response": []
+						"description": "Admin endpoint - Update project order for kanban (requires JWT)"
+					}
 				},
 				{
 					"name": "Delete Project",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/projects/{{project_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"projects",
-								"{{project_id}}"
+							"raw": "{{base_url}}/projects/:id",
+							"host": ["{{base_url}}"],
+							"path": ["projects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
 						"description": "Admin endpoint - Delete project (requires JWT)"
-					},
-					"response": []
+					}
 				}
-			],
-			"description": "Project management endpoints"
+			]
 		},
 		{
 			"name": "Experiences",
@@ -357,21 +302,12 @@
 				{
 					"name": "Get All Experiences (Paginated)",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/experiences?page=1&limit=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"experiences"
-							],
+							"raw": "{{base_url}}/experiences?page=1&limit=15",
+							"host": ["{{base_url}}"],
+							"path": ["experiences"],
 							"query": [
 								{
 									"key": "page",
@@ -385,54 +321,42 @@
 								}
 							]
 						},
-						"description": "Public endpoint - Get paginated experiences (15 per page by default). Returns: experiences array, page, limit, total, total_pages, has_next, has_previous"
-					},
-					"response": []
+						"description": "Public endpoint - Returns paginated experiences with page, limit, total, total_pages, has_next, has_previous"
+					}
 				},
 				{
 					"name": "Get Experience By ID",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/experiences/{{experience_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"experiences",
-								"{{experience_id}}"
+							"raw": "{{base_url}}/experiences/:id",
+							"host": ["{{base_url}}"],
+							"path": ["experiences", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Public endpoint - Get experience by ID"
-					},
-					"response": []
+						"description": "Public endpoint - Get specific experience by ID"
+					}
 				},
 				{
 					"name": "Add Experience",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data._id) {",
-									"        pm.collectionVariables.set(\"experience_id\", jsonData.data._id);",
-									"        console.log(\"Experience ID saved:\", jsonData.data._id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -442,26 +366,29 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"images\": [\"https://example.com/image1.jpg\"],\n  \"technologies\": [\"Go\", \"React\", \"MongoDB\"],\n  \"created_by\": \"Admin User\",\n  \"description\": \"Detailed experience description\",\n  \"company_name\": \"Company Name\",\n  \"company_logo\": \"https://example.com/logo.png\",\n  \"certificate_url\": \"https://example.com/certificate.pdf\",\n  \"projects\": [],\n  \"experience_time_line\": [\n    {\n      \"position\": \"Software Engineer\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2024-01-01\"\n    }\n  ]\n}"
+							"raw": "{\n  \"company_name\": \"Company Name\",\n  \"company_logo\": \"https://example.com/logo.png\",\n  \"description\": \"Job description\",\n  \"technologies\": [\"Python\", \"Django\"],\n  \"images\": [\"https://example.com/img1.png\"],\n  \"certificate_url\": \"https://example.com/cert.pdf\",\n  \"projects\": [],\n  \"experience_time_line\": [\n    {\n      \"position\": \"Software Engineer\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2023-12-31\"\n    }\n  ],\n  \"created_by\": \"Admin\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/experiences",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"experiences"
-							]
+							"raw": "{{base_url}}/experiences",
+							"host": ["{{base_url}}"],
+							"path": ["experiences"]
 						},
 						"description": "Admin endpoint - Add new experience (requires JWT)"
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Update Experience",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -471,47 +398,104 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"images\": [\"https://example.com/image1.jpg\", \"https://example.com/image2.jpg\"],\n  \"technologies\": [\"Go\", \"React\", \"MongoDB\", \"Docker\"],\n  \"created_by\": \"Admin User\",\n  \"description\": \"Updated experience description\",\n  \"company_name\": \"Updated Company Name\",\n  \"company_logo\": \"https://example.com/logo-new.png\",\n  \"certificate_url\": \"https://example.com/certificate-new.pdf\",\n  \"projects\": [],\n  \"experience_time_line\": [\n    {\n      \"position\": \"Senior Software Engineer\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2024-06-01\"\n    }\n  ]\n}"
+							"raw": "{\n  \"company_name\": \"Updated Company Name\",\n  \"company_logo\": \"https://example.com/logo.png\",\n  \"description\": \"Updated job description\",\n  \"technologies\": [\"Python\", \"FastAPI\"],\n  \"images\": [\"https://example.com/img1.png\"],\n  \"certificate_url\": \"https://example.com/cert.pdf\",\n  \"projects\": [],\n  \"experience_time_line\": [\n    {\n      \"position\": \"Senior Software Engineer\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"Present\"\n    }\n  ]\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/experiences/{{experience_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"experiences",
-								"{{experience_id}}"
+							"raw": "{{base_url}}/experiences/:id",
+							"host": ["{{base_url}}"],
+							"path": ["experiences", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Admin endpoint - Update experience (requires JWT)"
-					},
-					"response": []
+						"description": "Admin endpoint - Update existing experience (requires JWT)"
+					}
 				},
 				{
 					"name": "Delete Experience",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/experiences/{{experience_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"experiences",
-								"{{experience_id}}"
+							"raw": "{{base_url}}/experiences/:id",
+							"host": ["{{base_url}}"],
+							"path": ["experiences", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
 						"description": "Admin endpoint - Delete experience (requires JWT)"
-					},
-					"response": []
+					}
 				}
-			],
-			"description": "Experience management endpoints"
+			]
+		},
+		{
+			"name": "Skills",
+			"item": [
+				{
+					"name": "Get All Skills",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/skills",
+							"host": ["{{base_url}}"],
+							"path": ["skills"]
+						},
+						"description": "Public endpoint - Get all skills"
+					}
+				},
+				{
+					"name": "Add Skills",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"skills\": [\"JavaScript\", \"TypeScript\", \"React\", \"Node.js\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/skills",
+							"host": ["{{base_url}}"],
+							"path": ["skills"]
+						},
+						"description": "Admin endpoint - Add skills (requires JWT)"
+					}
+				}
+			]
 		},
 		{
 			"name": "Certifications",
@@ -519,21 +503,12 @@
 				{
 					"name": "Get All Certifications (Paginated)",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/certifications?page=1&limit=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certifications"
-							],
+							"raw": "{{base_url}}/certifications?page=1&limit=15",
+							"host": ["{{base_url}}"],
+							"path": ["certifications"],
 							"query": [
 								{
 									"key": "page",
@@ -547,54 +522,42 @@
 								}
 							]
 						},
-						"description": "Public endpoint - Get paginated certifications (15 per page by default). Returns: certifications array, page, limit, total, total_pages, has_next, has_previous"
-					},
-					"response": []
+						"description": "Public endpoint - Returns paginated certifications with page, limit, total, total_pages, has_next, has_previous"
+					}
 				},
 				{
 					"name": "Get Certification By ID",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/certifications/{{certification_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certifications",
-								"{{certification_id}}"
+							"raw": "{{base_url}}/certifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["certifications", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Public endpoint - Get certification by ID"
-					},
-					"response": []
+						"description": "Public endpoint - Get specific certification by ID"
+					}
 				},
 				{
 					"name": "Add Certification",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data._id) {",
-									"        pm.collectionVariables.set(\"certification_id\", jsonData.data._id);",
-									"        console.log(\"Certification ID saved:\", jsonData.data._id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -604,26 +567,29 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"projects\": [],\n  \"skills\": [\"Go\", \"Cloud\"],\n  \"images\": [\"https://example.com/cert-image.jpg\"],\n  \"title\": \"Certification Title\",\n  \"issuer\": \"Certification Issuer\",\n  \"issue_date\": \"2023-01-01\",\n  \"expiry_date\": \"2025-01-01\",\n  \"description\": \"Certification description\",\n  \"certificate_url\": \"https://example.com/certificate.pdf\"\n}"
+							"raw": "{\n  \"title\": \"AWS Certified Solutions Architect\",\n  \"issuer\": \"Amazon Web Services\",\n  \"issue_date\": \"2023-01-01\",\n  \"expiry_date\": \"2026-01-01\",\n  \"description\": \"Certification description\",\n  \"certificate_url\": \"https://example.com/cert.pdf\",\n  \"skills\": [\"AWS\", \"Cloud Computing\"],\n  \"images\": [\"https://example.com/img.png\"],\n  \"projects\": []\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/certifications",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certifications"
-							]
+							"raw": "{{base_url}}/certifications",
+							"host": ["{{base_url}}"],
+							"path": ["certifications"]
 						},
 						"description": "Admin endpoint - Add new certification (requires JWT)"
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Update Certification",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -633,47 +599,54 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"projects\": [],\n  \"skills\": [\"Go\", \"Cloud\", \"Kubernetes\"],\n  \"images\": [\"https://example.com/cert-image-updated.jpg\"],\n  \"title\": \"Updated Certification Title\",\n  \"issuer\": \"Updated Issuer\",\n  \"issue_date\": \"2023-01-01\",\n  \"expiry_date\": \"2026-01-01\",\n  \"description\": \"Updated certification description\",\n  \"certificate_url\": \"https://example.com/certificate-updated.pdf\"\n}"
+							"raw": "{\n  \"title\": \"Updated Certification Title\",\n  \"issuer\": \"Amazon Web Services\",\n  \"issue_date\": \"2023-01-01\",\n  \"expiry_date\": \"2026-01-01\",\n  \"description\": \"Updated description\",\n  \"certificate_url\": \"https://example.com/cert.pdf\",\n  \"skills\": [\"AWS\", \"Cloud Computing\", \"Terraform\"],\n  \"images\": [\"https://example.com/img.png\"],\n  \"projects\": []\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/certifications/{{certification_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certifications",
-								"{{certification_id}}"
+							"raw": "{{base_url}}/certifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["certifications", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Admin endpoint - Update certification (requires JWT)"
-					},
-					"response": []
+						"description": "Admin endpoint - Update existing certification (requires JWT)"
+					}
 				},
 				{
 					"name": "Delete Certification",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/certifications/{{certification_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certifications",
-								"{{certification_id}}"
+							"raw": "{{base_url}}/certifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["certifications", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
 						"description": "Admin endpoint - Delete certification (requires JWT)"
-					},
-					"response": []
+					}
 				}
-			],
-			"description": "Certification management endpoints"
+			]
 		},
 		{
 			"name": "Volunteer Experiences",
@@ -681,22 +654,12 @@
 				{
 					"name": "Get All Volunteer Experiences (Paginated)",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/volunteer/experiences?page=1&limit=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"volunteer",
-								"experiences"
-							],
+							"raw": "{{base_url}}/volunteer/experiences?page=1&limit=15",
+							"host": ["{{base_url}}"],
+							"path": ["volunteer", "experiences"],
 							"query": [
 								{
 									"key": "page",
@@ -710,55 +673,42 @@
 								}
 							]
 						},
-						"description": "Public endpoint - Get paginated volunteer experiences (15 per page by default). Returns: volunteer_experiences array, page, limit, total, total_pages, has_next, has_previous"
-					},
-					"response": []
+						"description": "Public endpoint - Returns paginated volunteer experiences with page, limit, total, total_pages, has_next, has_previous"
+					}
 				},
 				{
 					"name": "Get Volunteer Experience By ID",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/volunteer/experiences/{{volunteer_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"volunteer",
-								"experiences",
-								"{{volunteer_id}}"
+							"raw": "{{base_url}}/volunteer/experiences/:id",
+							"host": ["{{base_url}}"],
+							"path": ["volunteer", "experiences", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Public endpoint - Get volunteer experience by ID"
-					},
-					"response": []
+						"description": "Public endpoint - Get specific volunteer experience by ID"
+					}
 				},
 				{
 					"name": "Add Volunteer Experience",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data._id) {",
-									"        pm.collectionVariables.set(\"volunteer_id\", jsonData.data._id);",
-									"        console.log(\"Volunteer Experience ID saved:\", jsonData.data._id);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -768,27 +718,29 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"images\": [\"https://example.com/volunteer-image.jpg\"],\n  \"technologies\": [\"React\", \"Node.js\"],\n  \"projects\": [],\n  \"volunteer_time_line\": [\n    {\n      \"position\": \"Volunteer Position\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2023-12-31\"\n    }\n  ],\n  \"created_by\": \"Admin User\",\n  \"description\": \"Volunteer experience description\",\n  \"organisation\": \"Organization Name\",\n  \"organisation_logo\": \"https://example.com/org-logo.png\"\n}"
+							"raw": "{\n  \"organisation\": \"NGO Name\",\n  \"organisation_logo\": \"https://example.com/logo.png\",\n  \"description\": \"Volunteer work description\",\n  \"technologies\": [\"React\", \"Node.js\"],\n  \"images\": [\"https://example.com/img1.png\"],\n  \"projects\": [],\n  \"volunteer_time_line\": [\n    {\n      \"position\": \"Volunteer Developer\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2023-06-30\"\n    }\n  ],\n  \"created_by\": \"Admin\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/volunteer/experiences",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"volunteer",
-								"experiences"
-							]
+							"raw": "{{base_url}}/volunteer/experiences",
+							"host": ["{{base_url}}"],
+							"path": ["volunteer", "experiences"]
 						},
 						"description": "Admin endpoint - Add new volunteer experience (requires JWT)"
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Update Volunteer Experience",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -798,297 +750,54 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"images\": [\"https://example.com/volunteer-image-updated.jpg\"],\n  \"technologies\": [\"React\", \"Node.js\", \"MongoDB\"],\n  \"projects\": [],\n  \"volunteer_time_line\": [\n    {\n      \"position\": \"Updated Volunteer Position\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2024-06-30\"\n    }\n  ],\n  \"created_by\": \"Admin User\",\n  \"description\": \"Updated volunteer experience description\",\n  \"organisation\": \"Updated Organization Name\",\n  \"organisation_logo\": \"https://example.com/org-logo-updated.png\"\n}"
+							"raw": "{\n  \"organisation\": \"Updated NGO Name\",\n  \"organisation_logo\": \"https://example.com/logo.png\",\n  \"description\": \"Updated volunteer work description\",\n  \"technologies\": [\"React\", \"TypeScript\"],\n  \"images\": [\"https://example.com/img1.png\"],\n  \"projects\": [],\n  \"volunteer_time_line\": [\n    {\n      \"position\": \"Lead Volunteer Developer\",\n      \"start_date\": \"2023-01-01\",\n      \"end_date\": \"2023-12-31\"\n    }\n  ]\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/volunteer/experiences/{{volunteer_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"volunteer",
-								"experiences",
-								"{{volunteer_id}}"
+							"raw": "{{base_url}}/volunteer/experiences/:id",
+							"host": ["{{base_url}}"],
+							"path": ["volunteer", "experiences", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Admin endpoint - Update volunteer experience (requires JWT)"
-					},
-					"response": []
+						"description": "Admin endpoint - Update existing volunteer experience (requires JWT)"
+					}
 				},
 				{
 					"name": "Delete Volunteer Experience",
 					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/volunteer/experiences/{{volunteer_id}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"volunteer",
-								"experiences",
-								"{{volunteer_id}}"
-							]
-						},
-						"description": "Admin endpoint - Delete volunteer experience (requires JWT)"
-					},
-					"response": []
-				}
-			],
-			"description": "Volunteer experience management endpoints"
-		},
-		{
-			"name": "Skills",
-			"item": [
-				{
-					"name": "Get All Skills (Paginated)",
-					"request": {
 						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/skills?page=1&limit=15",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"skills"
-							],
-							"query": [
+							"type": "bearer",
+							"bearer": [
 								{
-									"key": "page",
-									"value": "1",
-									"description": "Page number (default: 1)"
-								},
-								{
-									"key": "limit",
-									"value": "15",
-									"description": "Items per page (default: 15, max: 100)"
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
 								}
 							]
 						},
-						"description": "Public endpoint - Get paginated skills (15 per page by default). Returns: skills array, page, limit, total, total_pages, has_next, has_previous"
-					},
-					"response": []
-				},
-				{
-					"name": "Add Skills",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"skills\": [\"Go\", \"React\", \"MongoDB\", \"Docker\"]\n}"
-						},
+						"method": "DELETE",
+						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/skills",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"skills"
+							"raw": "{{base_url}}/volunteer/experiences/:id",
+							"host": ["{{base_url}}"],
+							"path": ["volunteer", "experiences", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "",
+									"description": "MongoDB ObjectID"
+								}
 							]
 						},
-						"description": "Admin endpoint - Add skills (requires JWT)"
-					},
-					"response": []
+						"description": "Admin endpoint - Delete volunteer experience (requires JWT)"
+					}
 				}
-			],
-			"description": "Skills management endpoints"
-		},
-		{
-			"name": "GitHub Stats",
-			"item": [
-				{
-					"name": "Get GitHub Profile",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/github",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"github"
-							]
-						},
-						"description": "Public endpoint - Get GitHub profile information"
-					},
-					"response": []
-				},
-				{
-					"name": "Get GitHub Stars",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/github/stars",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"github",
-								"stars"
-							]
-						},
-						"description": "Public endpoint - Get total GitHub stars"
-					},
-					"response": []
-				},
-				{
-					"name": "Get GitHub Commits",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/github/commits",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"github",
-								"commits"
-							]
-						},
-						"description": "Public endpoint - Get total GitHub commits"
-					},
-					"response": []
-				},
-				{
-					"name": "Get GitHub Languages",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/github/languages",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"github",
-								"languages"
-							]
-						},
-						"description": "Public endpoint - Get GitHub language statistics"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Top Starred Repos",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/github/top-repos",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"github",
-								"top-repos"
-							]
-						},
-						"description": "Public endpoint - Get top starred repositories"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Contribution Calendar",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/github/calendar",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"github",
-								"calendar"
-							]
-						},
-						"description": "Public endpoint - Get GitHub contribution calendar"
-					},
-					"response": []
-				}
-			],
-			"description": "GitHub statistics endpoints"
-		},
-		{
-			"name": "LeetCode Stats",
-			"item": [
-				{
-					"name": "Get LeetCode Data",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/leetcode",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"leetcode"
-							]
-						},
-						"description": "Public endpoint - Get LeetCode statistics"
-					},
-					"response": []
-				}
-			],
-			"description": "LeetCode statistics endpoints"
+			]
 		},
 		{
 			"name": "Timeline",
@@ -1096,28 +805,118 @@
 				{
 					"name": "Get Experience Timeline",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/timeline",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"timeline"
-							]
+							"raw": "{{base_url}}/timeline",
+							"host": ["{{base_url}}"],
+							"path": ["timeline"]
 						},
-						"description": "Public endpoint - Get experience timeline"
-					},
-					"response": []
+						"description": "Public endpoint - Get combined timeline of all experiences"
+					}
 				}
-			],
-			"description": "Timeline endpoints"
+			]
+		},
+		{
+			"name": "GitHub Stats",
+			"item": [
+				{
+					"name": "Get GitHub Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/github",
+							"host": ["{{base_url}}"],
+							"path": ["github"]
+						},
+						"description": "Public endpoint - Fetch GitHub profile information"
+					}
+				},
+				{
+					"name": "Get GitHub Stars",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/github/stars",
+							"host": ["{{base_url}}"],
+							"path": ["github", "stars"]
+						},
+						"description": "Public endpoint - Fetch total GitHub stars"
+					}
+				},
+				{
+					"name": "Get GitHub Commits",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/github/commits",
+							"host": ["{{base_url}}"],
+							"path": ["github", "commits"]
+						},
+						"description": "Public endpoint - Fetch GitHub commit stats"
+					}
+				},
+				{
+					"name": "Get GitHub Languages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/github/languages",
+							"host": ["{{base_url}}"],
+							"path": ["github", "languages"]
+						},
+						"description": "Public endpoint - Fetch most used languages"
+					}
+				},
+				{
+					"name": "Get Top Starred Repos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/github/top-repos",
+							"host": ["{{base_url}}"],
+							"path": ["github", "top-repos"]
+						},
+						"description": "Public endpoint - Fetch top starred repositories"
+					}
+				},
+				{
+					"name": "Get Contribution Calendar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/github/calendar",
+							"host": ["{{base_url}}"],
+							"path": ["github", "calendar"]
+						},
+						"description": "Public endpoint - Fetch contribution calendar"
+					}
+				}
+			]
+		},
+		{
+			"name": "LeetCode Stats",
+			"item": [
+				{
+					"name": "Get LeetCode Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/leetcode",
+							"host": ["{{base_url}}"],
+							"path": ["leetcode"]
+						},
+						"description": "Public endpoint - Fetch LeetCode statistics"
+					}
+				}
+			]
 		}
 	]
 }

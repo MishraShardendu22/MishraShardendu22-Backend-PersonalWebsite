@@ -197,6 +197,9 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	route.SetupCertificationRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupAdminRoutes(crudGroup, config.AdminPass, config.JWT_SECRET)
 
+	// Search routes (public, no auth required)
+	route.SetupSearchRoutes(crudGroup)
+
 	statsGroup := app.Group("/api", util.SetupExternalAPILimiter(logger))
 	route.SetupStatsRoutes(statsGroup)
 

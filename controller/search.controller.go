@@ -104,9 +104,9 @@ func calculateBM25Score(
 
 func buildDocumentIndex() ([]models.SearchDocument, error) {
 	var (
-		wg          sync.WaitGroup
-		mu          sync.Mutex
-		documents   = make([]models.SearchDocument, 0, 100)
+		wg        sync.WaitGroup
+		mu        sync.Mutex
+		documents = make([]models.SearchDocument, 0, 100)
 	)
 
 	wg.Add(4)
@@ -364,8 +364,16 @@ func Search(c *fiber.Ctx) error {
 	}
 	results := make([]models.SearchResult, 0, resultCount)
 
-	for i := 0; i < resultCount; i++ {
+	seenIDs := make(map[string]struct{}, resultCount)
+
+	for i := 0; i < len(scoredDocs) && len(results) < resultCount; i++ {
 		sd := &scoredDocs[i]
+
+		if _, exists := seenIDs[sd.doc.ID]; exists {
+			continue
+		}
+		seenIDs[sd.doc.ID] = struct{}{}
+
 		description := sd.doc.Description
 		if len(description) > 150 {
 			description = description[:150] + "..."
@@ -401,8 +409,8 @@ func GetSearchSuggestions(c *fiber.Ctx) error {
 	query = strings.ToLower(query)
 
 	var (
-		wg  sync.WaitGroup
-		mu  sync.Mutex
+		wg            sync.WaitGroup
+		mu            sync.Mutex
 		suggestionSet = make(map[string]struct{}, 32)
 	)
 

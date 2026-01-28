@@ -4,13 +4,14 @@ A robust Go backend API built with Fiber framework for managing personal portfol
 
 ## Features
 
-- **JWT Authentication** - Secure admin authentication for write operations
-- **MongoDB Integration** - MongoDB database with MGM (Mongo ODM) for data persistence
-- **RESTful API** - Clean REST endpoints for portfolio data management
-- **CORS Support** - Configurable CORS for frontend integration
-- **Structured Logging** - Configurable logging levels with slog
+- **JWT Authentication** - Secure admin authentication for write operations with token refresh
+- **MongoDB Integration** - MongoDB database with MGM (Mongo ODM) for efficient data persistence
+- **RESTful API** - Clean REST endpoints for portfolio data management with OpenAPI documentation
+- **CORS Support** - Configurable CORS for secure frontend integration
+- **Structured Logging** - Configurable logging levels with slog for better debugging
 - **Environment Configuration** - Flexible configuration via environment variables
 - **Graceful Shutdown** - Proper signal handling for clean shutdowns
+- **Rate Limiting** - Built-in rate limiting to prevent abuse
 
 ## Tech Stack
 

@@ -1,7 +1,12 @@
 # Portfolio Backend API Documentation
 
 ## Overview
-This backend provides JWT-protected endpoints for managing portfolio data including projects, skills, and experience.
+This backend provides JWT-protected RESTful endpoints for managing portfolio data including projects, skills, experience, certifications, and volunteer work. Built with Go Fiber framework and MongoDB.
+
+## Base URL
+```
+http://localhost:8080/api
+```
 
 ## Authentication
 

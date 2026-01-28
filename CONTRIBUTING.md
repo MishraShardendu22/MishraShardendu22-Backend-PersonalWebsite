@@ -27,7 +27,11 @@ If you have an idea for an enhancement, please open an issue on GitHub. Include 
 ## Pull Requests
 
 1. Fork the repository.
-2. Create a new branch (`git checkout -b my-new-feature`).
+2. Create a new branch (`git checkout -b feature/my-new-feature`).
+3. Make your changes and test thoroughly.
+4. Run `go fmt` and `go vet` on your code.
+5. Commit your changes with clear, descriptive messages.
+6. Push to your fork and submit a pull request.
 3. Make your changes.
 4. Commit your changes (`git commit -am 'Add some feature'`).
 5. Push to the branch (`git push origin my-new-feature`).

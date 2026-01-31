@@ -10,7 +10,7 @@ import (
 
 func SetupCRUDAPILimiter(logger *slog.Logger) fiber.Handler {
 	CrudAPILimiter := limiter.New(limiter.Config{
-		Max:        80,              
+		Max:        120,
 		Expiration: 1 * time.Minute,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()
@@ -32,7 +32,7 @@ func SetupCRUDAPILimiter(logger *slog.Logger) fiber.Handler {
 
 func SetupExternalAPILimiter(logger *slog.Logger) fiber.Handler {
 	ExternalAPILimiter := limiter.New(limiter.Config{
-		Max:        20,
+		Max:        120,
 		Expiration: 1 * time.Minute,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()

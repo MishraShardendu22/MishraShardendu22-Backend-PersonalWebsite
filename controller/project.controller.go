@@ -13,7 +13,6 @@ import (
 )
 
 func GetProjects(c *fiber.Ctx) error {
-	// Parse pagination parameters
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 15)
 
@@ -37,7 +36,6 @@ func GetProjects(c *fiber.Ctx) error {
 		return projects[i].Order < projects[j].Order
 	})
 
-	// Calculate pagination
 	totalProjects := len(projects)
 	totalPages := (totalProjects + limit - 1) / limit
 	startIndex := (page - 1) * limit
@@ -96,11 +94,13 @@ func AddProjects(c *fiber.Ctx) error {
 	if p.ProjectName == "" || p.SmallDescription == "" || p.Description == "" {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Name, small description and description are required", nil, "")
 	}
+
+	p.Tokens = util.GenerateTokens([]string{p.ProjectName, p.Description, p.SmallDescription}, p.Skills)
+
 	if err := mgm.Coll(&models.Project{}).Create(&p); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to add project", nil, "")
 	}
 
-	// Since there's only one user, get the first user from the database
 	var user models.User
 	if err := mgm.Coll(&models.User{}).First(bson.M{}, &user); err != nil {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "User not found", nil, "")
@@ -109,6 +109,8 @@ func AddProjects(c *fiber.Ctx) error {
 	if err := mgm.Coll(&models.User{}).Update(&user); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user projects", nil, "")
 	}
+
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Project added successfully", p, "")
 }
 
@@ -130,6 +132,8 @@ func UpdateProjects(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Name, small description and description are required", nil, "")
 	}
 
+	tokens := util.GenerateTokens([]string{input.ProjectName, input.Description, input.SmallDescription}, input.Skills)
+
 	update := bson.M{"$set": bson.M{
 		"project_name":       input.ProjectName,
 		"small_description":  input.SmallDescription,
@@ -138,10 +142,13 @@ func UpdateProjects(c *fiber.Ctx) error {
 		"project_repository": input.ProjectRepository,
 		"project_live_link":  input.ProjectLiveLink,
 		"project_video":      input.ProjectVideo,
+		"tokens":             tokens,
 	}}
 	if _, err := mgm.Coll(&models.Project{}).UpdateByID(c.Context(), projObjID, update); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update project", nil, "")
 	}
+
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Project updated successfully", input, "")
 }
 
@@ -156,13 +163,11 @@ func RemoveProjects(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Project ID is required", nil, "")
 	}
 
-	// Convert pid to ObjectID
 	objID, err := primitive.ObjectIDFromHex(pid)
 	if err != nil {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Invalid project ID", nil, "")
 	}
 
-	// Remove reference from user.Projects
 	updated := make([]primitive.ObjectID, 0, len(user.Projects))
 	for _, projID := range user.Projects {
 		if projID != objID {
@@ -171,39 +176,19 @@ func RemoveProjects(c *fiber.Ctx) error {
 	}
 	user.Projects = updated
 
-	// Update user
 	if err := mgm.Coll(&models.User{}).Update(&user); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user", nil, "")
 	}
 
-	// Delete actual project
 	proj := &models.Project{}
 	proj.SetID(objID)
 	if err := mgm.Coll(proj).Delete(proj); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete project", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Project removed successfully", nil, "")
 }
-
-// func UpdateProjectOrderInitial(c *fiber.Ctx) error {
-// 	var projects []models.Project
-
-// 	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
-// 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch projects", nil, "")
-// 	}
-
-// 	i := 1
-// 	for _, project := range projects {
-// 		project.Order = i
-// 		if err := mgm.Coll(&project).Update(&project); err != nil {
-// 			return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update project order", nil, "")
-// 		}
-// 		i++
-// 	}
-
-// 	return util.ResponseAPI(c, fiber.StatusOK, "Project order updated", nil, "")
-// }
 
 func UpdateProjectOrderKanban(c *fiber.Ctx) error {
 	var updatedProjects []models.UpdatedProject

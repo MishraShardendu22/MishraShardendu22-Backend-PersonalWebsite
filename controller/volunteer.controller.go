@@ -10,7 +10,6 @@ import (
 )
 
 func GetVolunteerExperiences(c *fiber.Ctx) error {
-	// Parse pagination parameters
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 15)
 
@@ -32,7 +31,6 @@ func GetVolunteerExperiences(c *fiber.Ctx) error {
 
 	exps = ReverseVolunteerExperiences(exps)
 
-	// Calculate pagination
 	totalExps := len(exps)
 	totalPages := (totalExps + limit - 1) / limit
 	startIndex := (page - 1) * limit
@@ -96,6 +94,8 @@ func AddVolunteerExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Organisation and at least one timeline entry are required", nil, "")
 	}
 
+	e.Tokens = util.GenerateTokens([]string{e.Organisation, e.Description}, e.Technologies)
+
 	if err := mgm.Coll(&models.VolunteerExperience{}).Create(&e); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to add volunteer experience", nil, "")
 	}
@@ -110,6 +110,7 @@ func AddVolunteerExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user volunteer experiences", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Volunteer experience added successfully", e, "")
 }
 
@@ -138,10 +139,8 @@ func UpdateVolunteerExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "Volunteer experience not found", nil, "")
 	}
 
-	// Append new timeline entries instead of overwriting
 	existing.VolunteerTimeLine = append(existing.VolunteerTimeLine, input.VolunteerTimeLine...)
 
-	// Update other fields
 	existing.Organisation = input.Organisation
 	existing.Description = input.Description
 	existing.Technologies = input.Technologies
@@ -149,10 +148,13 @@ func UpdateVolunteerExperiences(c *fiber.Ctx) error {
 	existing.OrganisationLogo = input.OrganisationLogo
 	existing.Images = input.Images
 
+	existing.Tokens = util.GenerateTokens([]string{existing.Organisation, existing.Description}, existing.Technologies)
+
 	if err := mgm.Coll(&models.VolunteerExperience{}).Update(&existing); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update volunteer experience", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Volunteer experience updated successfully", existing, "")
 }
 
@@ -197,5 +199,6 @@ func RemoveVolunteerExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete volunteer experience", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Volunteer experience removed successfully", nil, "")
 }

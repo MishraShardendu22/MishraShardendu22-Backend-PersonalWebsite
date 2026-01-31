@@ -10,7 +10,6 @@ import (
 )
 
 func GetExperiences(c *fiber.Ctx) error {
-	// Parse pagination parameters
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 15)
 
@@ -32,7 +31,6 @@ func GetExperiences(c *fiber.Ctx) error {
 
 	exps = ReverseExperiences(exps)
 
-	// Calculate pagination
 	totalExps := len(exps)
 	totalPages := (totalExps + limit - 1) / limit
 	startIndex := (page - 1) * limit
@@ -96,6 +94,8 @@ func AddExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Company name, position and start date are required", nil, "")
 	}
 
+	e.Tokens = util.GenerateTokens([]string{e.CompanyName, e.Description}, e.Technologies)
+
 	if err := mgm.Coll(&models.Experience{}).Create(&e); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to add experience", nil, "")
 	}
@@ -110,6 +110,7 @@ func AddExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user experiences", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Experience added successfully", e, "")
 }
 
@@ -138,10 +139,8 @@ func UpdateExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "Experience not found", nil, "")
 	}
 
-	// Append new timeline entries instead of overwriting
 	existing.ExperienceTimeline = append(existing.ExperienceTimeline, input.ExperienceTimeline...)
 
-	// Update other fields
 	existing.CompanyName = input.CompanyName
 	existing.Description = input.Description
 	existing.Technologies = input.Technologies
@@ -150,10 +149,13 @@ func UpdateExperiences(c *fiber.Ctx) error {
 	existing.CertificateURL = input.CertificateURL
 	existing.Images = input.Images
 
+	existing.Tokens = util.GenerateTokens([]string{existing.CompanyName, existing.Description}, existing.Technologies)
+
 	if err := mgm.Coll(&models.Experience{}).Update(&existing); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update experience", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Experience updated successfully", existing, "")
 }
 
@@ -198,5 +200,6 @@ func RemoveExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete experience", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Experience removed successfully", nil, "")
 }

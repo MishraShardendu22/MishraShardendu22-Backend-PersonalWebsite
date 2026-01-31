@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"unicode"
+	"time"
 
 	"github.com/MishraShardendu22/models"
 	"github.com/MishraShardendu22/util"
@@ -15,41 +15,21 @@ import (
 )
 
 const (
-	bm25K1 = 1.2
-	bm25B  = 0.75
+	bm25K1        = 1.2
+	bm25B         = 0.75
+	indexCacheTTL = 5 * time.Minute
+)
+
+// In-memory cache for document index
+var (
+	cachedIndex     []models.SearchDocument
+	cacheTimestamp  time.Time
+	cacheMutex      sync.RWMutex
 )
 
 type scoredDocument struct {
 	score float64
 	doc   *models.SearchDocument
-}
-
-func tokenize(text string) []string {
-	text = strings.ToLower(text)
-	estimatedTokens := len(text) / 6
-	if estimatedTokens < 8 {
-		estimatedTokens = 8
-	}
-	tokens := make([]string, 0, estimatedTokens)
-	var builder strings.Builder
-	builder.Grow(32)
-
-	for _, r := range text {
-		if unicode.IsLetter(r) || unicode.IsNumber(r) {
-			builder.WriteRune(r)
-		} else if builder.Len() > 0 {
-			if token := builder.String(); len(token) > 1 {
-				tokens = append(tokens, token)
-			}
-			builder.Reset()
-		}
-	}
-
-	if builder.Len() > 1 {
-		tokens = append(tokens, builder.String())
-	}
-
-	return tokens
 }
 
 func calculateBM25Score(
@@ -79,7 +59,7 @@ func calculateBM25Score(
 		score += idf * tfComponent
 	}
 
-	titleTokens := tokenize(doc.Title)
+	titleTokens := util.Tokenize(doc.Title)
 	for _, qt := range queryTokens {
 		for _, tt := range titleTokens {
 			if tt == qt {
@@ -89,7 +69,6 @@ func calculateBM25Score(
 		}
 	}
 
-	// Boost for skill matches
 	for _, qt := range queryTokens {
 		for _, skill := range doc.Skills {
 			if strings.Contains(strings.ToLower(skill), qt) {
@@ -100,6 +79,41 @@ func calculateBM25Score(
 	}
 
 	return score
+}
+
+// InvalidateSearchCache clears the cached index - call this when documents change
+func InvalidateSearchCache() {
+	cacheMutex.Lock()
+	cachedIndex = nil
+	cacheTimestamp = time.Time{}
+	cacheMutex.Unlock()
+}
+
+func getDocumentIndex() ([]models.SearchDocument, error) {
+	cacheMutex.RLock()
+	if cachedIndex != nil && time.Since(cacheTimestamp) < indexCacheTTL {
+		// Return a copy to prevent mutation
+		result := make([]models.SearchDocument, len(cachedIndex))
+		copy(result, cachedIndex)
+		cacheMutex.RUnlock()
+		return result, nil
+	}
+	cacheMutex.RUnlock()
+
+	// Cache miss or expired - rebuild
+	documents, err := buildDocumentIndex()
+	if err != nil {
+		return nil, err
+	}
+
+	// Store in cache
+	cacheMutex.Lock()
+	cachedIndex = make([]models.SearchDocument, len(documents))
+	copy(cachedIndex, documents)
+	cacheTimestamp = time.Now()
+	cacheMutex.Unlock()
+
+	return documents, nil
 }
 
 func buildDocumentIndex() ([]models.SearchDocument, error) {
@@ -119,19 +133,9 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 		}
 
 		localDocs := make([]models.SearchDocument, 0, len(projects))
-		var builder strings.Builder
 
 		for i := range projects {
 			p := &projects[i]
-			builder.Reset()
-			builder.WriteString(p.ProjectName)
-			builder.WriteByte(' ')
-			builder.WriteString(p.Description)
-			builder.WriteByte(' ')
-			builder.WriteString(p.SmallDescription)
-			builder.WriteByte(' ')
-			builder.WriteString(strings.Join(p.Skills, " "))
-
 			localDocs = append(localDocs, models.SearchDocument{
 				ID:          p.ID.Hex(),
 				Type:        "project",
@@ -139,7 +143,7 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				Subtitle:    p.SmallDescription,
 				Description: p.Description,
 				Skills:      p.Skills,
-				Tokens:      tokenize(builder.String()),
+				Tokens:      p.Tokens,
 				URL:         "/projects/" + p.ID.Hex(),
 			})
 		}
@@ -157,17 +161,9 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 		}
 
 		localDocs := make([]models.SearchDocument, 0, len(experiences))
-		var builder strings.Builder
 
 		for i := range experiences {
 			e := &experiences[i]
-			builder.Reset()
-			builder.WriteString(e.CompanyName)
-			builder.WriteByte(' ')
-			builder.WriteString(e.Description)
-			builder.WriteByte(' ')
-			builder.WriteString(strings.Join(e.Technologies, " "))
-
 			subtitle := ""
 			if len(e.ExperienceTimeline) > 0 {
 				subtitle = e.ExperienceTimeline[0].Position
@@ -180,7 +176,7 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				Subtitle:    subtitle,
 				Description: e.Description,
 				Skills:      e.Technologies,
-				Tokens:      tokenize(builder.String()),
+				Tokens:      e.Tokens,
 				URL:         "/experiences/" + e.ID.Hex(),
 			})
 		}
@@ -198,19 +194,9 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 		}
 
 		localDocs := make([]models.SearchDocument, 0, len(certifications))
-		var builder strings.Builder
 
 		for i := range certifications {
 			c := &certifications[i]
-			builder.Reset()
-			builder.WriteString(c.Title)
-			builder.WriteByte(' ')
-			builder.WriteString(c.Issuer)
-			builder.WriteByte(' ')
-			builder.WriteString(c.Description)
-			builder.WriteByte(' ')
-			builder.WriteString(strings.Join(c.Skills, " "))
-
 			localDocs = append(localDocs, models.SearchDocument{
 				ID:          c.ID.Hex(),
 				Type:        "certificate",
@@ -218,7 +204,7 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				Subtitle:    c.Issuer,
 				Description: c.Description,
 				Skills:      c.Skills,
-				Tokens:      tokenize(builder.String()),
+				Tokens:      c.Tokens,
 				URL:         "/certificates/" + c.ID.Hex(),
 			})
 		}
@@ -236,17 +222,9 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 		}
 
 		localDocs := make([]models.SearchDocument, 0, len(volunteers))
-		var builder strings.Builder
 
 		for i := range volunteers {
 			v := &volunteers[i]
-			builder.Reset()
-			builder.WriteString(v.Organisation)
-			builder.WriteByte(' ')
-			builder.WriteString(v.Description)
-			builder.WriteByte(' ')
-			builder.WriteString(strings.Join(v.Technologies, " "))
-
 			subtitle := ""
 			if len(v.VolunteerTimeLine) > 0 {
 				subtitle = v.VolunteerTimeLine[0].PositionOfAuthority
@@ -259,7 +237,7 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				Subtitle:    subtitle,
 				Description: v.Description,
 				Skills:      v.Technologies,
-				Tokens:      tokenize(builder.String()),
+				Tokens:      v.Tokens,
 				URL:         "/volunteer/" + v.ID.Hex(),
 			})
 		}
@@ -285,9 +263,9 @@ func Search(c *fiber.Ctx) error {
 		limit = 10
 	}
 
-	documents, err := buildDocumentIndex()
+	documents, err := getDocumentIndex()
 	if err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to build search index", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to get search index", nil, "")
 	}
 
 	if typeFilter != "" {
@@ -308,7 +286,8 @@ func Search(c *fiber.Ctx) error {
 		}, "")
 	}
 
-	queryTokens := tokenize(query)
+	// Tokenize query at runtime (document tokens are pre-stored in DB)
+	queryTokens := util.Tokenize(query)
 	if len(queryTokens) == 0 {
 		return util.ResponseAPI(c, fiber.StatusOK, "Search completed", models.SearchResponse{
 			Results:    []models.SearchResult{},

@@ -188,6 +188,10 @@ func main() {
 
 func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	crudGroup := app.Group("/api", util.SetupCRUDAPILimiter(logger))
+	route.SetupSearchRoutes(crudGroup)
+
+	statsGroup := app.Group("/api", util.SetupExternalAPILimiter(logger))
+	route.SetupStatsRoutes(statsGroup)
 
 	route.SetupTimeline(crudGroup, config.JWT_SECRET)
 	route.SetupExpRoutes(crudGroup, config.JWT_SECRET)
@@ -197,13 +201,6 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	route.SetupCertificationRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupAdminRoutes(crudGroup, config.AdminPass, config.JWT_SECRET)
 
-	// Search routes (public, no auth required)
-	route.SetupSearchRoutes(crudGroup)
-
-	statsGroup := app.Group("/api", util.SetupExternalAPILimiter(logger))
-	route.SetupStatsRoutes(statsGroup)
-
-	// Test endpoint
 	app.Get("/api/test123", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message": "Working fine",

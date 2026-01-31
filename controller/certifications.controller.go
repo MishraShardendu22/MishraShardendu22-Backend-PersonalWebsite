@@ -10,7 +10,6 @@ import (
 )
 
 func GetCertifications(c *fiber.Ctx) error {
-	// Parse pagination parameters
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 15)
 
@@ -21,8 +20,6 @@ func GetCertifications(c *fiber.Ctx) error {
 		limit = 15
 	}
 
-	// Since there's only one user and we want public access,
-	// fetch all certifications directly from the database
 	var certs []models.CertificationOrAchievements
 	if err := mgm.Coll(&models.CertificationOrAchievements{}).SimpleFind(&certs, bson.M{}); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch certifications", nil, "")
@@ -34,7 +31,6 @@ func GetCertifications(c *fiber.Ctx) error {
 
 	certs = reverseCerts(certs)
 
-	// Calculate pagination
 	totalCerts := len(certs)
 	totalPages := (totalCerts + limit - 1) / limit
 	startIndex := (page - 1) * limit
@@ -105,11 +101,12 @@ func AddCertification(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Title, description, and issuer are required", nil, "")
 	}
 
+	cert.Tokens = util.GenerateTokens([]string{cert.Title, cert.Issuer, cert.Description}, cert.Skills)
+
 	if err := mgm.Coll(&models.CertificationOrAchievements{}).Create(&cert); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to add certification", nil, "")
 	}
 
-	// Since there's only one user, get the first user from the database
 	var user models.User
 	if err := mgm.Coll(&models.User{}).First(bson.M{}, &user); err != nil {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "User not found", nil, "")
@@ -120,6 +117,7 @@ func AddCertification(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user certifications", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Certification added successfully", cert, "")
 }
 
@@ -143,6 +141,8 @@ func UpdateCertification(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Title, description, and issuer are required", nil, "")
 	}
 
+	tokens := util.GenerateTokens([]string{input.Title, input.Issuer, input.Description}, input.Skills)
+
 	update := bson.M{"$set": bson.M{
 		"title":           input.Title,
 		"description":     input.Description,
@@ -153,17 +153,18 @@ func UpdateCertification(c *fiber.Ctx) error {
 		"issuer":          input.Issuer,
 		"issue_date":      input.IssueDate,
 		"expiry_date":     input.ExpiryDate,
+		"tokens":          tokens,
 	}}
 
 	if _, err := mgm.Coll(&models.CertificationOrAchievements{}).UpdateByID(c.Context(), certObjID, update); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update certification", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Certification updated successfully", input, "")
 }
 
 func RemoveCertification(c *fiber.Ctx) error {
-	// Fetch first (and only) user
 	var user models.User
 	userColl := mgm.Coll(&models.User{})
 	if err := userColl.First(bson.M{}, &user); err != nil {
@@ -180,7 +181,6 @@ func RemoveCertification(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusBadRequest, "Invalid certification ID", nil, "")
 	}
 
-	// Filter certification ID
 	newCerts := make([]primitive.ObjectID, 0, len(user.Certifications))
 	for _, id := range user.Certifications {
 		if id != certObjID {
@@ -189,12 +189,10 @@ func RemoveCertification(c *fiber.Ctx) error {
 	}
 	user.Certifications = newCerts
 
-	// Save updated user
 	if err := userColl.Update(&user); err != nil {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user certifications", nil, "")
 	}
 
-	// Delete the certification document
 	certColl := mgm.Coll(&models.CertificationOrAchievements{})
 	cert := &models.CertificationOrAchievements{}
 	cert.SetID(certObjID)
@@ -203,5 +201,6 @@ func RemoveCertification(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete certification", nil, "")
 	}
 
+	InvalidateSearchCache()
 	return util.ResponseAPI(c, fiber.StatusOK, "Certification removed successfully", nil, "")
 }

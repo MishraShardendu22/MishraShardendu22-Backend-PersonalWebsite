@@ -22,6 +22,7 @@ type User struct {
 type Project struct {
 	mgm.DefaultModel  `bson:",inline" json:"inline"`
 	Skills            []string `bson:"skills" json:"skills"`
+	Tokens            []string `bson:"tokens" json:"-"`
 	Description       string   `bson:"description" json:"description"`
 	ProjectName       string   `bson:"project_name" json:"project_name"`
 	ProjectVideo      string   `bson:"project_video" json:"project_video"`
@@ -35,6 +36,7 @@ type Experience struct {
 	mgm.DefaultModel   `bson:",inline" json:"inline"`
 	Images             []string             `bson:"images" json:"images"`
 	Technologies       []string             `bson:"technologies" json:"technologies"`
+	Tokens             []string             `bson:"tokens" json:"-"`
 	Projects           []primitive.ObjectID `bson:"projects" json:"projects"`
 	ExperienceTimeline []ExperienceTimeLine `bson:"experience_time_line" json:"experience_time_line"`
 	CreatedBy          string               `bson:"created_by" json:"created_by"`
@@ -49,6 +51,7 @@ type CertificationOrAchievements struct {
 	Projects         []primitive.ObjectID `bson:"projects" json:"projects"`
 	Skills           []string             `bson:"skills" json:"skills"`
 	Images           []string             `bson:"images" json:"images"`
+	Tokens           []string             `bson:"tokens" json:"-"`
 	Title            string               `bson:"title" json:"title"`
 	Issuer           string               `bson:"issuer" json:"issuer"`
 	IssueDate        string               `bson:"issue_date" json:"issue_date"`
@@ -61,6 +64,7 @@ type VolunteerExperience struct {
 	mgm.DefaultModel  `bson:",inline" json:"inline"`
 	Images            []string                      `bson:"images" json:"images"`
 	Technologies      []string                      `bson:"technologies" json:"technologies"`
+	Tokens            []string                      `bson:"tokens" json:"-"`
 	Projects          []primitive.ObjectID          `bson:"projects" json:"projects"`
 	VolunteerTimeLine []VolunteerExperienceTimeLine `bson:"volunteer_time_line" json:"volunteer_time_line"`
 	CreatedBy         string                        `bson:"created_by" json:"created_by"`

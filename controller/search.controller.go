@@ -81,7 +81,6 @@ func calculateBM25Score(
 	return score
 }
 
-// InvalidateSearchCache clears the cached index - call this when documents change
 func InvalidateSearchCache() {
 	cacheMutex.Lock()
 	cachedIndex = nil
@@ -92,7 +91,6 @@ func InvalidateSearchCache() {
 func getDocumentIndex() ([]models.SearchDocument, error) {
 	cacheMutex.RLock()
 	if cachedIndex != nil && time.Since(cacheTimestamp) < indexCacheTTL {
-		// Return a copy to prevent mutation
 		result := make([]models.SearchDocument, len(cachedIndex))
 		copy(result, cachedIndex)
 		cacheMutex.RUnlock()
@@ -100,13 +98,11 @@ func getDocumentIndex() ([]models.SearchDocument, error) {
 	}
 	cacheMutex.RUnlock()
 
-	// Cache miss or expired - rebuild
 	documents, err := buildDocumentIndex()
 	if err != nil {
 		return nil, err
 	}
 
-	// Store in cache
 	cacheMutex.Lock()
 	cachedIndex = make([]models.SearchDocument, len(documents))
 	copy(cachedIndex, documents)

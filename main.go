@@ -196,6 +196,7 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 	route.SetupTimeline(crudGroup, config.JWT_SECRET)
 	route.SetupExpRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupProjectRoutes(crudGroup, config.JWT_SECRET)
+	route.SetupSkillRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupVolunteerExpRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupCertificationRoutes(crudGroup, config.JWT_SECRET)
 	route.SetupAdminRoutes(crudGroup, config.AdminPass, config.JWT_SECRET)

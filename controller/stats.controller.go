@@ -129,7 +129,7 @@ func FetchGitHubCommits(c *fiber.Ctx) error {
 			continue
 		}
 		wg.Add(1)
-		sem.Acquire(context.Background(), 1)
+		_ = sem.Acquire(context.Background(), 1)
 		go func(name string) {
 			defer wg.Done()
 			defer sem.Release(1)
@@ -193,7 +193,7 @@ func FetchGitHubLanguages(c *fiber.Ctx) error {
 			continue
 		}
 		wg.Add(1)
-		sem.Acquire(context.Background(), 1)
+		_ = sem.Acquire(context.Background(), 1)
 		go func(url string) {
 			defer wg.Done()
 			defer sem.Release(1)
@@ -281,7 +281,7 @@ func FetchContributionCalendar(c *fiber.Ctx) error {
 
 	body, _ := io.ReadAll(resp.Body)
 	var data map[string]interface{}
-	json.Unmarshal(body, &data)
+	_ = json.Unmarshal(body, &data)
 
 	return c.JSON(data)
 }

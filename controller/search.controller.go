@@ -22,9 +22,9 @@ const (
 
 // In-memory cache for document index
 var (
-	cachedIndex     []models.SearchDocument
-	cacheTimestamp  time.Time
-	cacheMutex      sync.RWMutex
+	cachedIndex    []models.SearchDocument
+	cacheTimestamp time.Time
+	cacheMutex     sync.RWMutex
 )
 
 type scoredDocument struct {

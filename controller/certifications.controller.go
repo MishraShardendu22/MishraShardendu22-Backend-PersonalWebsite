@@ -22,7 +22,7 @@ func GetCertifications(c *fiber.Ctx) error {
 
 	var certs []models.CertificationOrAchievements
 	if err := mgm.Coll(&models.CertificationOrAchievements{}).SimpleFind(&certs, bson.M{}); err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch certifications", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to fetch certifications", err.Error(), "")
 	}
 
 	if len(certs) == 0 {
@@ -104,7 +104,7 @@ func AddCertification(c *fiber.Ctx) error {
 	cert.Tokens = util.GenerateTokens([]string{cert.Title, cert.Issuer, cert.Description}, cert.Skills)
 
 	if err := mgm.Coll(&models.CertificationOrAchievements{}).Create(&cert); err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to add certification", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to add certification", err.Error(), "")
 	}
 
 	var user models.User
@@ -114,7 +114,7 @@ func AddCertification(c *fiber.Ctx) error {
 
 	user.Certifications = append(user.Certifications, cert.ID)
 	if err := mgm.Coll(&models.User{}).Update(&user); err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user certifications", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user certifications", err.Error(), "")
 	}
 
 	InvalidateSearchCache()
@@ -157,7 +157,7 @@ func UpdateCertification(c *fiber.Ctx) error {
 	}}
 
 	if _, err := mgm.Coll(&models.CertificationOrAchievements{}).UpdateByID(c.Context(), certObjID, update); err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update certification", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update certification", err.Error(), "")
 	}
 
 	InvalidateSearchCache()
@@ -190,7 +190,7 @@ func RemoveCertification(c *fiber.Ctx) error {
 	user.Certifications = newCerts
 
 	if err := userColl.Update(&user); err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user certifications", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to update user certifications", err.Error(), "")
 	}
 
 	certColl := mgm.Coll(&models.CertificationOrAchievements{})
@@ -198,7 +198,7 @@ func RemoveCertification(c *fiber.Ctx) error {
 	cert.SetID(certObjID)
 
 	if err := certColl.Delete(cert); err != nil {
-		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete certification", nil, "")
+		return util.ResponseAPI(c, fiber.StatusInternalServerError, "Failed to delete certification", err.Error(), "")
 	}
 
 	InvalidateSearchCache()

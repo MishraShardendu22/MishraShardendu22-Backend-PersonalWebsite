@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func GenerateJWT(userId string, email string,secret string) (string, error) {
+func GenerateJWT(userId string, email string, secret string) (string, error) {
 	claims := jwt.MapClaims{
 		"id":    userId,
 		"email": email,

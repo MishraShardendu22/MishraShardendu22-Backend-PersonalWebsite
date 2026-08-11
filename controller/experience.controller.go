@@ -139,7 +139,7 @@ func UpdateExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "Experience not found", nil, "")
 	}
 
-	existing.ExperienceTimeline = append(existing.ExperienceTimeline, input.ExperienceTimeline...)
+	existing.ExperienceTimeline = input.ExperienceTimeline
 
 	existing.CompanyName = input.CompanyName
 	existing.Description = input.Description

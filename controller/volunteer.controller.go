@@ -139,7 +139,7 @@ func UpdateVolunteerExperiences(c *fiber.Ctx) error {
 		return util.ResponseAPI(c, fiber.StatusNotFound, "Volunteer experience not found", nil, "")
 	}
 
-	existing.VolunteerTimeLine = append(existing.VolunteerTimeLine, input.VolunteerTimeLine...)
+	existing.VolunteerTimeLine = input.VolunteerTimeLine
 
 	existing.Organisation = input.Organisation
 	existing.Description = input.Description

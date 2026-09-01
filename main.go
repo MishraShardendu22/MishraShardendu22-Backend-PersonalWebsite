@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/MishraShardendu22/models"
 	"github.com/MishraShardendu22/route"
 	"github.com/MishraShardendu22/util"
+	"github.com/MishraShardendu22/web"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -167,6 +170,14 @@ func main() {
 				message = e.Message
 			}
 
+			// Content negotiation only. Programmatic clients keep the exact
+			// JSON envelope they have always received; a browser that lands on
+			// an unknown route gets a readable page instead of a raw payload.
+			if code == fiber.StatusNotFound && wantsHTML(c) {
+				c.Set(fiber.HeaderContentType, fiber.MIMETextHTMLCharsetUTF8)
+				return c.Status(code).SendString(web.NotFoundPage(c.Path()))
+			}
+
 			return util.ResponseAPI(c, code, message, nil, "")
 		},
 	})
@@ -184,6 +195,17 @@ func main() {
 	}()
 
 	gracefulShutdown(app, logger)
+}
+
+// wantsHTML reports whether the caller is a browser navigating to the service
+// rather than a program calling the API. It is deliberately conservative: only
+// a request that explicitly prefers HTML over JSON gets an HTML response.
+func wantsHTML(c *fiber.Ctx) bool {
+	accept := c.Get(fiber.HeaderAccept)
+	if !strings.Contains(accept, "text/html") {
+		return false
+	}
+	return !strings.Contains(accept, "application/json")
 }
 
 func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
@@ -205,5 +227,22 @@ func SetUpRoutes(app *fiber.App, logger *slog.Logger, config *models.Config) {
 		return c.JSON(fiber.Map{
 			"message": "Working fine",
 		})
+	})
+
+	// Human-facing status page. Programmatic callers that ask for JSON still
+	// get JSON, so nothing that consumes this service is affected.
+	app.Get("/", func(c *fiber.Ctx) error {
+		if !wantsHTML(c) {
+			return util.ResponseAPI(c, fiber.StatusOK, "Portfolio API is running",
+				fiber.Map{
+					"service":     "Portfolio API",
+					"environment": config.Environment,
+					"docs":        "/",
+				}, "")
+		}
+		c.Set(fiber.HeaderContentType, fiber.MIMETextHTMLCharsetUTF8)
+		return c.Status(fiber.StatusOK).SendString(
+			web.StatusPage(config.Environment, runtime.Version()),
+		)
 	})
 }

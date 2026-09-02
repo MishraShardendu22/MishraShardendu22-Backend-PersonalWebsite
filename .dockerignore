@@ -1,0 +1,17 @@
+.git
+.github
+.vscode
+*.log
+.env
+.env*.local
+*.png
+*.jpg
+*.exe
+portfolio-backend
+server
+postman_collection.json
+postman_environment.json
+POSTMAN_README.md
+API_DOCS.md
+DESIGN_AND_OOPS_PRINCIPLES.md
+.DS_Store

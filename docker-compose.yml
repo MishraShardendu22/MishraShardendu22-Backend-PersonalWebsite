@@ -1,0 +1,40 @@
+services:
+  portfolio-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shardendumishra22/portfolio-backend:latest
+    container_name: portfolio-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - ENVIRONMENT=production
+      - CORS_ALLOW_ORIGINS=*
+      - LOG_LEVEL=info
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
+      - DB_NAME=${DB_NAME:-portfolio_db}
+      - ADMIN_PASS=${ADMIN_PASS:-dev-admin-pass}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-min-32-chars-long}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:7
+    container_name: portfolio-mongodb-local
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodata:

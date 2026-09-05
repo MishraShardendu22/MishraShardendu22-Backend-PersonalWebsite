@@ -113,26 +113,13 @@ func getDocumentIndex() ([]models.SearchDocument, error) {
 }
 
 func buildDocumentIndex() ([]models.SearchDocument, error) {
-	var (
-		wg        sync.WaitGroup
-		mu        sync.Mutex
-		documents = make([]models.SearchDocument, 0, 100)
-	)
+	documents := make([]models.SearchDocument, 0, 100)
 
-	wg.Add(4)
-
-	go func() {
-		defer wg.Done()
-		var projects []models.Project
-		if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
-			return
-		}
-
-		localDocs := make([]models.SearchDocument, 0, len(projects))
-
+	var projects []models.Project
+	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err == nil {
 		for i := range projects {
 			p := &projects[i]
-			localDocs = append(localDocs, models.SearchDocument{
+			documents = append(documents, models.SearchDocument{
 				ID:          p.ID.Hex(),
 				Type:        "project",
 				Title:       p.ProjectName,
@@ -143,21 +130,10 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				URL:         "/projects/" + p.ID.Hex(),
 			})
 		}
+	}
 
-		mu.Lock()
-		documents = append(documents, localDocs...)
-		mu.Unlock()
-	}()
-
-	go func() {
-		defer wg.Done()
-		var experiences []models.Experience
-		if err := mgm.Coll(&models.Experience{}).SimpleFind(&experiences, bson.M{}); err != nil {
-			return
-		}
-
-		localDocs := make([]models.SearchDocument, 0, len(experiences))
-
+	var experiences []models.Experience
+	if err := mgm.Coll(&models.Experience{}).SimpleFind(&experiences, bson.M{}); err == nil {
 		for i := range experiences {
 			e := &experiences[i]
 			subtitle := ""
@@ -165,7 +141,7 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				subtitle = e.ExperienceTimeline[0].Position
 			}
 
-			localDocs = append(localDocs, models.SearchDocument{
+			documents = append(documents, models.SearchDocument{
 				ID:          e.ID.Hex(),
 				Type:        "experience",
 				Title:       e.CompanyName,
@@ -176,24 +152,13 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				URL:         "/experiences/" + e.ID.Hex(),
 			})
 		}
+	}
 
-		mu.Lock()
-		documents = append(documents, localDocs...)
-		mu.Unlock()
-	}()
-
-	go func() {
-		defer wg.Done()
-		var certifications []models.CertificationOrAchievements
-		if err := mgm.Coll(&models.CertificationOrAchievements{}).SimpleFind(&certifications, bson.M{}); err != nil {
-			return
-		}
-
-		localDocs := make([]models.SearchDocument, 0, len(certifications))
-
+	var certifications []models.CertificationOrAchievements
+	if err := mgm.Coll(&models.CertificationOrAchievements{}).SimpleFind(&certifications, bson.M{}); err == nil {
 		for i := range certifications {
 			c := &certifications[i]
-			localDocs = append(localDocs, models.SearchDocument{
+			documents = append(documents, models.SearchDocument{
 				ID:          c.ID.Hex(),
 				Type:        "certificate",
 				Title:       c.Title,
@@ -204,21 +169,10 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				URL:         "/certificates/" + c.ID.Hex(),
 			})
 		}
+	}
 
-		mu.Lock()
-		documents = append(documents, localDocs...)
-		mu.Unlock()
-	}()
-
-	go func() {
-		defer wg.Done()
-		var volunteers []models.VolunteerExperience
-		if err := mgm.Coll(&models.VolunteerExperience{}).SimpleFind(&volunteers, bson.M{}); err != nil {
-			return
-		}
-
-		localDocs := make([]models.SearchDocument, 0, len(volunteers))
-
+	var volunteers []models.VolunteerExperience
+	if err := mgm.Coll(&models.VolunteerExperience{}).SimpleFind(&volunteers, bson.M{}); err == nil {
 		for i := range volunteers {
 			v := &volunteers[i]
 			subtitle := ""
@@ -226,7 +180,7 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				subtitle = v.VolunteerTimeLine[0].PositionOfAuthority
 			}
 
-			localDocs = append(localDocs, models.SearchDocument{
+			documents = append(documents, models.SearchDocument{
 				ID:          v.ID.Hex(),
 				Type:        "volunteer",
 				Title:       v.Organisation,
@@ -237,13 +191,8 @@ func buildDocumentIndex() ([]models.SearchDocument, error) {
 				URL:         "/volunteer/" + v.ID.Hex(),
 			})
 		}
+	}
 
-		mu.Lock()
-		documents = append(documents, localDocs...)
-		mu.Unlock()
-	}()
-
-	wg.Wait()
 	return documents, nil
 }
 
@@ -383,96 +332,52 @@ func GetSearchSuggestions(c *fiber.Ctx) error {
 
 	query = strings.ToLower(query)
 
-	var (
-		wg            sync.WaitGroup
-		mu            sync.Mutex
-		suggestionSet = make(map[string]struct{}, 32)
-	)
+	suggestionSet := make(map[string]struct{}, 32)
 
-	wg.Add(3)
-
-	go func() {
-		defer wg.Done()
-		var projects []models.Project
-		if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err != nil {
-			return
-		}
-
-		localSuggestions := make([]string, 0, 16)
+	var projects []models.Project
+	if err := mgm.Coll(&models.Project{}).SimpleFind(&projects, bson.M{}); err == nil {
 		for i := range projects {
 			p := &projects[i]
 			for _, skill := range p.Skills {
 				if strings.Contains(strings.ToLower(skill), query) {
-					localSuggestions = append(localSuggestions, skill)
+					suggestionSet[skill] = struct{}{}
 				}
 			}
 			if strings.Contains(strings.ToLower(p.ProjectName), query) {
-				localSuggestions = append(localSuggestions, p.ProjectName)
+				suggestionSet[p.ProjectName] = struct{}{}
 			}
 		}
+	}
 
-		mu.Lock()
-		for _, s := range localSuggestions {
-			suggestionSet[s] = struct{}{}
-		}
-		mu.Unlock()
-	}()
-
-	go func() {
-		defer wg.Done()
-		var experiences []models.Experience
-		if err := mgm.Coll(&models.Experience{}).SimpleFind(&experiences, bson.M{}); err != nil {
-			return
-		}
-
-		localSuggestions := make([]string, 0, 16)
+	var experiences []models.Experience
+	if err := mgm.Coll(&models.Experience{}).SimpleFind(&experiences, bson.M{}); err == nil {
 		for i := range experiences {
 			e := &experiences[i]
 			for _, tech := range e.Technologies {
 				if strings.Contains(strings.ToLower(tech), query) {
-					localSuggestions = append(localSuggestions, tech)
+					suggestionSet[tech] = struct{}{}
 				}
 			}
 			if strings.Contains(strings.ToLower(e.CompanyName), query) {
-				localSuggestions = append(localSuggestions, e.CompanyName)
+				suggestionSet[e.CompanyName] = struct{}{}
 			}
 		}
+	}
 
-		mu.Lock()
-		for _, s := range localSuggestions {
-			suggestionSet[s] = struct{}{}
-		}
-		mu.Unlock()
-	}()
-
-	go func() {
-		defer wg.Done()
-		var certifications []models.CertificationOrAchievements
-		if err := mgm.Coll(&models.CertificationOrAchievements{}).SimpleFind(&certifications, bson.M{}); err != nil {
-			return
-		}
-
-		localSuggestions := make([]string, 0, 16)
+	var certifications []models.CertificationOrAchievements
+	if err := mgm.Coll(&models.CertificationOrAchievements{}).SimpleFind(&certifications, bson.M{}); err == nil {
 		for i := range certifications {
 			cert := &certifications[i]
 			for _, skill := range cert.Skills {
 				if strings.Contains(strings.ToLower(skill), query) {
-					localSuggestions = append(localSuggestions, skill)
+					suggestionSet[skill] = struct{}{}
 				}
 			}
 			if strings.Contains(strings.ToLower(cert.Title), query) {
-				localSuggestions = append(localSuggestions, cert.Title)
+				suggestionSet[cert.Title] = struct{}{}
 			}
 		}
-
-		mu.Lock()
-		for _, s := range localSuggestions {
-			suggestionSet[s] = struct{}{}
-		}
-		mu.Unlock()
-	}()
-
-	wg.Wait()
+	}
 
 	suggestions := make([]string, 0, len(suggestionSet))
 	for s := range suggestionSet {

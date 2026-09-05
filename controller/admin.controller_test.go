@@ -50,7 +50,7 @@ func TestAdminController(t *testing.T) {
 		req := httptest.NewRequest("POST", "/admin", bytes.NewBufferString("invalid json"))
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, 10000)
 		if err != nil {
 			t.Fatalf("failed to run app test: %v", err)
 		}
@@ -76,7 +76,7 @@ func TestAdminController(t *testing.T) {
 		req := httptest.NewRequest("POST", "/admin", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, 10000)
 		if err != nil {
 			t.Fatalf("failed to run app test: %v", err)
 		}
@@ -103,7 +103,7 @@ func TestAdminController(t *testing.T) {
 		req := httptest.NewRequest("POST", "/admin", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, 10000)
 		if err != nil {
 			t.Fatalf("failed to run app test: %v", err)
 		}
@@ -139,7 +139,7 @@ func TestAdminController(t *testing.T) {
 		req := httptest.NewRequest("POST", "/admin", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, 10000)
 		if err != nil {
 			t.Fatalf("failed to run app test: %v", err)
 		}
@@ -162,7 +162,7 @@ func TestAdminController(t *testing.T) {
 		})
 
 		req := httptest.NewRequest("GET", "/admin", nil)
-		resp, _ := app.Test(req)
+		resp, _ := app.Test(req, 10000)
 		if resp.StatusCode != fiber.StatusUnauthorized {
 			t.Errorf("expected status 401, got %d", resp.StatusCode)
 		}
@@ -186,7 +186,7 @@ func TestAdminController(t *testing.T) {
 		}))
 
 		req := httptest.NewRequest("GET", "/admin", nil)
-		resp, _ := app.Test(req)
+		resp, _ := app.Test(req, 10000)
 
 		if resp.StatusCode != fiber.StatusOK {
 			t.Errorf("expected status 200, got %d", resp.StatusCode)
